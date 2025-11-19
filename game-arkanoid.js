@@ -9,7 +9,7 @@ let paddle, ball, fishBlocks = [];
 let score = 0;
 let lives = 3;
 let gameAnimationId;
-let paddleElement, ballElement, scoreElement, gameFooterElement, spaceHintElement;
+let paddleElement, ballElement, scoreElement, gameFooterElement, spaceHintElement, tapToStartButton;
 let gameSpeed = 1.0; // Speed multiplier for game (1.0 = normal speed)
 let playerName = '';
 let waitingForPlayerName = false;
@@ -248,23 +248,74 @@ function prepareGame() {
     ballElement.style.lineHeight = '1';
     document.body.appendChild(ballElement);
     
-    // Create "Press SPACE to start" hint
-    spaceHintElement = document.createElement('div');
-    spaceHintElement.id = 'space-hint';
-    spaceHintElement.textContent = 'Press SPACE to start';
-    spaceHintElement.style.position = 'fixed';
-    spaceHintElement.style.color = 'var(--accent)';
-    spaceHintElement.style.fontSize = '14px';
-    spaceHintElement.style.fontFamily = "'Courier New', monospace";
-    spaceHintElement.style.textShadow = '0 0 8px var(--accent)';
-    spaceHintElement.style.zIndex = '10003';
-    spaceHintElement.style.pointerEvents = 'none';
-    spaceHintElement.style.fontWeight = 'bold';
-    spaceHintElement.style.opacity = '1';
-    spaceHintElement.style.animation = 'blink 1.5s infinite';
-    spaceHintElement.style.textAlign = 'center';
-    spaceHintElement.style.whiteSpace = 'nowrap';
-    document.body.appendChild(spaceHintElement);
+    // Detect mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    
+    if (isMobile) {
+        // Create "Tap to start" button for mobile
+        tapToStartButton = document.createElement('button');
+        tapToStartButton.id = 'tap-to-start-button';
+        tapToStartButton.textContent = 'Tap to start';
+        tapToStartButton.style.position = 'fixed';
+        tapToStartButton.style.color = 'var(--accent)';
+        tapToStartButton.style.fontSize = '18px';
+        tapToStartButton.style.fontFamily = "'Courier New', monospace";
+        tapToStartButton.style.textShadow = '0 0 8px var(--accent)';
+        tapToStartButton.style.zIndex = '10003';
+        tapToStartButton.style.pointerEvents = 'auto';
+        tapToStartButton.style.fontWeight = 'bold';
+        tapToStartButton.style.opacity = '1';
+        tapToStartButton.style.animation = 'blink 1.5s infinite';
+        tapToStartButton.style.textAlign = 'center';
+        tapToStartButton.style.whiteSpace = 'nowrap';
+        tapToStartButton.style.background = 'rgba(0, 0, 0, 0.8)';
+        tapToStartButton.style.border = '2px solid var(--accent)';
+        tapToStartButton.style.borderRadius = '8px';
+        tapToStartButton.style.padding = '15px 30px';
+        tapToStartButton.style.cursor = 'pointer';
+        tapToStartButton.style.boxShadow = '0 0 20px rgba(0, 255, 0, 0.5)';
+        tapToStartButton.style.userSelect = 'none';
+        tapToStartButton.style.touchAction = 'manipulation';
+        tapToStartButton.addEventListener('click', () => {
+            if (gameWaitingForStart && !ballLaunched) {
+                gameWaitingForStart = false;
+                startGame();
+            }
+        });
+        tapToStartButton.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameWaitingForStart && !ballLaunched) {
+                gameWaitingForStart = false;
+                startGame();
+            }
+        });
+        document.body.appendChild(tapToStartButton);
+        
+        // Create hidden space hint for desktop (if needed)
+        spaceHintElement = document.createElement('div');
+        spaceHintElement.id = 'space-hint';
+        spaceHintElement.textContent = 'Press SPACE to start';
+        spaceHintElement.style.display = 'none';
+        document.body.appendChild(spaceHintElement);
+    } else {
+        // Create "Press SPACE to start" hint for desktop
+        spaceHintElement = document.createElement('div');
+        spaceHintElement.id = 'space-hint';
+        spaceHintElement.textContent = 'Press SPACE to start';
+        spaceHintElement.style.position = 'fixed';
+        spaceHintElement.style.color = 'var(--accent)';
+        spaceHintElement.style.fontSize = '14px';
+        spaceHintElement.style.fontFamily = "'Courier New', monospace";
+        spaceHintElement.style.textShadow = '0 0 8px var(--accent)';
+        spaceHintElement.style.zIndex = '10003';
+        spaceHintElement.style.pointerEvents = 'none';
+        spaceHintElement.style.fontWeight = 'bold';
+        spaceHintElement.style.opacity = '1';
+        spaceHintElement.style.animation = 'blink 1.5s infinite';
+        spaceHintElement.style.textAlign = 'center';
+        spaceHintElement.style.whiteSpace = 'nowrap';
+        document.body.appendChild(spaceHintElement);
+    }
     
     // Create game footer with divider and info
     gameFooterElement = document.createElement('div');
@@ -288,10 +339,10 @@ function prepareGame() {
     // Create mobile control buttons (only on mobile devices)
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
     if (isMobile) {
-        // Left button
+        // Left button (inverted: right arrow)
         mobileControlLeft = document.createElement('button');
         mobileControlLeft.id = 'mobile-control-left';
-        mobileControlLeft.textContent = '←';
+        mobileControlLeft.textContent = '→'; // Inverted: shows right arrow for left control
         mobileControlLeft.style.position = 'fixed';
         mobileControlLeft.style.left = '20px';
         mobileControlLeft.style.bottom = '20px';
@@ -299,22 +350,22 @@ function prepareGame() {
         mobileControlLeft.style.height = '60px';
         mobileControlLeft.style.borderRadius = '50%';
         mobileControlLeft.style.border = '2px solid var(--accent)';
-        mobileControlLeft.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        mobileControlLeft.style.color = 'var(--accent)';
+        mobileControlLeft.style.backgroundColor = 'var(--accent)'; // Inverted: accent background
+        mobileControlLeft.style.color = '#000000'; // Inverted: black text
         mobileControlLeft.style.fontSize = '24px';
         mobileControlLeft.style.fontFamily = 'monospace';
-        mobileControlLeft.style.textShadow = '0 0 10px var(--accent)';
+        mobileControlLeft.style.textShadow = 'none'; // No shadow for inverted
         mobileControlLeft.style.cursor = 'pointer';
         mobileControlLeft.style.zIndex = '10005';
         mobileControlLeft.style.userSelect = 'none';
         mobileControlLeft.style.touchAction = 'manipulation';
-        mobileControlLeft.style.boxShadow = '0 0 15px rgba(0, 255, 255, 0.5)';
+        mobileControlLeft.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.8)';
         document.body.appendChild(mobileControlLeft);
         
-        // Right button
+        // Right button (inverted: left arrow)
         mobileControlRight = document.createElement('button');
         mobileControlRight.id = 'mobile-control-right';
-        mobileControlRight.textContent = '→';
+        mobileControlRight.textContent = '←'; // Inverted: shows left arrow for right control
         mobileControlRight.style.position = 'fixed';
         mobileControlRight.style.right = '20px';
         mobileControlRight.style.bottom = '20px';
@@ -322,16 +373,16 @@ function prepareGame() {
         mobileControlRight.style.height = '60px';
         mobileControlRight.style.borderRadius = '50%';
         mobileControlRight.style.border = '2px solid var(--accent)';
-        mobileControlRight.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-        mobileControlRight.style.color = 'var(--accent)';
+        mobileControlRight.style.backgroundColor = 'var(--accent)'; // Inverted: accent background
+        mobileControlRight.style.color = '#000000'; // Inverted: black text
         mobileControlRight.style.fontSize = '24px';
         mobileControlRight.style.fontFamily = 'monospace';
-        mobileControlRight.style.textShadow = '0 0 10px var(--accent)';
+        mobileControlRight.style.textShadow = 'none'; // No shadow for inverted
         mobileControlRight.style.cursor = 'pointer';
         mobileControlRight.style.zIndex = '10005';
         mobileControlRight.style.userSelect = 'none';
         mobileControlRight.style.touchAction = 'manipulation';
-        mobileControlRight.style.boxShadow = '0 0 15px rgba(0, 255, 255, 0.5)';
+        mobileControlRight.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.8)';
         document.body.appendChild(mobileControlRight);
         
         // Touch event handlers
@@ -452,6 +503,11 @@ function startGame() {
     // Remove space prompt
     const spacePrompt = document.getElementById('game-space-prompt');
     if (spacePrompt) spacePrompt.remove();
+    
+    // Hide tap to start button if exists (don't remove, just hide for potential restart)
+    if (tapToStartButton) {
+        tapToStartButton.style.display = 'none';
+    }
     
     // Scroll to show fish near top
     const fishArt = document.getElementById('fish-art');
@@ -579,8 +635,21 @@ function updateGameDisplay() {
         ballElement.style.top = (rect.top + ball.y - 10) + 'px';
     }
     
-    // Update and position "Press SPACE to start" hint
-    if (spaceHintElement) {
+    // Update and position "Press SPACE to start" hint (desktop) or "Tap to start" button (mobile)
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    
+    if (isMobile && tapToStartButton) {
+        if (!ballLaunched && gameWaitingForStart) {
+            // Show button centered in the game area
+            tapToStartButton.style.display = 'block';
+            tapToStartButton.style.left = (rect.left + rect.width / 2) + 'px';
+            tapToStartButton.style.top = (rect.top + rect.height / 2) + 'px';
+            tapToStartButton.style.transform = 'translate(-50%, -50%)';
+        } else {
+            // Hide button when ball is launched
+            tapToStartButton.style.display = 'none';
+        }
+    } else if (spaceHintElement) {
         if (!ballLaunched) {
             // Show hint centered in the game area
             spaceHintElement.style.display = 'block';
@@ -801,6 +870,7 @@ function restartGameFromPlay() {
     if (paddleElement) { paddleElement.remove(); paddleElement = null; }
     if (ballElement) { ballElement.remove(); ballElement = null; }
     if (spaceHintElement) { spaceHintElement.remove(); spaceHintElement = null; }
+    if (tapToStartButton) { tapToStartButton.remove(); tapToStartButton = null; }
     if (gameFooterElement) { gameFooterElement.remove(); gameFooterElement = null; }
     scoreElement = null;
     
@@ -834,6 +904,7 @@ function endGame() {
     if (paddleElement) { paddleElement.remove(); paddleElement = null; }
     if (ballElement) { ballElement.remove(); ballElement = null; }
     if (spaceHintElement) { spaceHintElement.remove(); spaceHintElement = null; }
+    if (tapToStartButton) { tapToStartButton.remove(); tapToStartButton = null; }
     if (gameFooterElement) { gameFooterElement.remove(); gameFooterElement = null; }
     if (mobileControlLeft) { mobileControlLeft.remove(); mobileControlLeft = null; }
     if (mobileControlRight) { mobileControlRight.remove(); mobileControlRight = null; }
@@ -938,6 +1009,7 @@ function winGame() {
     if (paddleElement) { paddleElement.remove(); paddleElement = null; }
     if (ballElement) { ballElement.remove(); ballElement = null; }
     if (spaceHintElement) { spaceHintElement.remove(); spaceHintElement = null; }
+    if (tapToStartButton) { tapToStartButton.remove(); tapToStartButton = null; }
     if (gameFooterElement) { gameFooterElement.remove(); gameFooterElement = null; }
     if (mobileControlLeft) { mobileControlLeft.remove(); mobileControlLeft = null; }
     if (mobileControlRight) { mobileControlRight.remove(); mobileControlRight = null; }
@@ -1046,6 +1118,10 @@ function resetGame() {
     if (spaceHintElement) {
         spaceHintElement.remove();
         spaceHintElement = null;
+    }
+    if (tapToStartButton) {
+        tapToStartButton.remove();
+        tapToStartButton = null;
     }
     if (gameFooterElement) {
         gameFooterElement.remove();
