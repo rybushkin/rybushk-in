@@ -17,3 +17,5 @@
 • clear
 
 • exit
+
+🎮 v2.0 (son edition) → https://rybushk.in/papa.html

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>rybushk.in v.4.1</title>
-    <link rel="stylesheet" href="styles-ascii.css">
+    <link rel="stylesheet" href="../rybushk.in - v0002 - Claude/styles-ascii.css">
     <link rel="stylesheet" href="https://js-dos.com/6.22/current/css/js-dos.css">
     <style>
         .monitor.fullscreen {
@@ -1039,7 +1039,25 @@
             menu: () => {
                 appendOutput('$ menu', 'terminal-prompt');
                 appendOutput('');
-                SiteTexts.commands.menu.forEach(line => appendOutput(line));
+                SiteTexts.commands.menu.forEach(line => {
+                    if (line === '') {
+                        appendOutput('');
+                    } else if (line.includes('https://')) {
+                        // Create clickable link for son's version
+                        const outputLine = appendOutput('');
+                        const link = document.createElement('a');
+                        link.href = 'https://rybushk.in/papa.html';
+                        link.textContent = line;
+                        link.style.color = 'var(--md-link)';
+                        link.style.textDecoration = 'underline';
+                        link.style.textShadow = '0 0 5px var(--md-link)';
+                        link.target = '_blank';
+                        outputLine.innerHTML = '';
+                        outputLine.appendChild(link);
+                    } else {
+                        appendOutput(line);
+                    }
+                });
             },
             clear: () => {
                 document.getElementById('terminal-output').innerHTML = '';
