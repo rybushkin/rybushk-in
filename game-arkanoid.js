@@ -149,10 +149,17 @@ function showGameInstructions() {
         // Scroll to show fish at top of view
         const monitorContent = document.querySelector('.monitor-content');
         setTimeout(() => {
-            // Scroll to fish art position - ensure fish is visible at top
-            const scrollTarget = artDiv.offsetTop - 20;
-            monitorContent.scrollTop = scrollTarget;
-            console.log('Scrolled to:', scrollTarget, 'Fish offset:', artDiv.offsetTop);
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+            if (isMobile) {
+                // On mobile: scroll to the very top to show fish
+                monitorContent.scrollTop = 0;
+                console.log('Mobile: Scrolled to top, Fish offset:', artDiv.offsetTop);
+            } else {
+                // On desktop: scroll to fish art position with small margin
+                const scrollTarget = artDiv.offsetTop - 20;
+                monitorContent.scrollTop = scrollTarget;
+                console.log('Scrolled to:', scrollTarget, 'Fish offset:', artDiv.offsetTop);
+            }
         }, 150);
         
         // Wait for DOM update before initializing game
