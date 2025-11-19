@@ -14,7 +14,7 @@
       gtag('config', 'G-E6VH9684RN');
     </script>
     
-    <link rel="stylesheet" href="styles-ascii.css">
+    <link rel="stylesheet" href="../rybushk.in - v0002 - Claude/styles-ascii.css">
     <link rel="stylesheet" href="https://js-dos.com/6.22/current/css/js-dos.css">
     <style>
         .monitor.fullscreen {
@@ -1107,6 +1107,13 @@
             // Execute command
             if (commands[commandName]) {
                 if (typeof commands[commandName] === 'function') {
+                    // Track successful command
+                    if (typeof gtag !== 'undefined') {
+                        gtag('event', 'command_executed', {
+                            'command_name': commandName
+                        });
+                    }
+                    
                     // Check if command accepts arguments
                     if (commandName === 'theme' && args) {
                         commands[commandName](args);
@@ -1115,6 +1122,13 @@
                     }
                 }
             } else {
+                // Track invalid command
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'command_executed', {
+                        'command_name': 'command_not_found'
+                    });
+                }
+                
                 appendOutput(`$ ${trimmed}`, 'terminal-prompt');
                 appendOutput('');
                 appendOutput(`Command not found: ${commandName}`);
