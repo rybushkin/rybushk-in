@@ -317,12 +317,21 @@ function prepareGame() {
         document.body.appendChild(spaceHintElement);
     }
     
+    // Detect mobile device
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    
     // Create game footer with divider and info
     gameFooterElement = document.createElement('div');
     gameFooterElement.id = 'game-footer';
     gameFooterElement.style.position = 'fixed';
     gameFooterElement.style.left = contentRect.left + 'px';
-    gameFooterElement.style.bottom = contentRect.bottom - 60 + 'px'; // 60px from bottom
+    if (isMobile) {
+        // On mobile: footer at the very bottom
+        gameFooterElement.style.bottom = '0px';
+    } else {
+        // On desktop: footer 60px from bottom
+        gameFooterElement.style.bottom = contentRect.bottom - 60 + 'px';
+    }
     gameFooterElement.style.width = contentRect.width + 'px';
     gameFooterElement.style.height = '60px';
     gameFooterElement.style.color = 'var(--text)';
@@ -337,7 +346,6 @@ function prepareGame() {
     document.body.appendChild(gameFooterElement);
     
     // Create mobile control buttons (only on mobile devices)
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
     if (isMobile) {
         // Left button (inverted: right arrow)
         mobileControlLeft = document.createElement('button');
@@ -457,24 +465,48 @@ function prepareGame() {
     gameFooterElement.appendChild(scoreElement);
     
     // Initialize game objects (relative coordinates)
-    // Paddle positioned low, just above the footer (70px = 60px footer + 10px margin)
-    paddle = {
-        x: gameWidth / 2 - 60,
-        y: gameHeight - 75,
-        width: 120,
-        height: 20,
-        speed: 8,
-        dx: 0
-    };
+    // Paddle positioned low, just above the footer
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
     
-    ball = {
-        x: gameWidth / 2,
-        y: gameHeight - 95, // Ball starts on paddle
-        radius: 10,
-        dx: 0,
-        dy: 0,
-        speed: 3
-    };
+    if (isMobile) {
+        // On mobile: paddle above footer (60px footer + 20px margin = 80px from bottom)
+        paddle = {
+            x: gameWidth / 2 - 60,
+            y: gameHeight - 80,
+            width: 120,
+            height: 20,
+            speed: 8,
+            dx: 0
+        };
+        
+        ball = {
+            x: gameWidth / 2,
+            y: gameHeight - 100, // Ball starts on paddle
+            radius: 10,
+            dx: 0,
+            dy: 0,
+            speed: 3
+        };
+    } else {
+        // On desktop: paddle positioned low, just above the footer (70px = 60px footer + 10px margin)
+        paddle = {
+            x: gameWidth / 2 - 60,
+            y: gameHeight - 75,
+            width: 120,
+            height: 20,
+            speed: 8,
+            dx: 0
+        };
+        
+        ball = {
+            x: gameWidth / 2,
+            y: gameHeight - 95, // Ball starts on paddle
+            radius: 10,
+            dx: 0,
+            dy: 0,
+            speed: 3
+        };
+    }
     
     ballLaunched = false;
     ballLaunchFrame = 0;
@@ -509,13 +541,21 @@ function startGame() {
         tapToStartButton.style.display = 'none';
     }
     
-    // Scroll to show fish near top
+    // Scroll to show fish near top (especially important on mobile)
     const fishArt = document.getElementById('fish-art');
     if (fishArt) {
         setTimeout(() => {
-            const scrollTarget = fishArt.offsetTop - 20;
-            monitorContent.scrollTop = scrollTarget;
-            console.log('Game started, scrolled to:', scrollTarget);
+            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+            if (isMobile) {
+                // On mobile: scroll fish to the very top
+                monitorContent.scrollTop = 0;
+                console.log('Game started on mobile, scrolled to top');
+            } else {
+                // On desktop: scroll fish near top with small margin
+                const scrollTarget = fishArt.offsetTop - 20;
+                monitorContent.scrollTop = scrollTarget;
+                console.log('Game started, scrolled to:', scrollTarget);
+            }
         }, 100);
     }
     
