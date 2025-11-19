@@ -1155,6 +1155,44 @@
             // Initial cursor position
             setTimeout(updateCursorPosition, 0);
 
+            // Mobile: scroll input into view when focused
+            function scrollInputIntoView() {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+                if (!isMobile) return;
+                
+                const inputLine = document.getElementById('terminal-input-line');
+                const monitorContent = document.querySelector('.monitor-content');
+                if (!inputLine || !monitorContent) return;
+                
+                // Wait a bit for keyboard to appear
+                setTimeout(() => {
+                    const inputRect = inputLine.getBoundingClientRect();
+                    const containerRect = monitorContent.getBoundingClientRect();
+                    const scrollTop = monitorContent.scrollTop;
+                    
+                    // Check if input is below visible area
+                    const inputBottom = inputRect.bottom;
+                    const containerBottom = containerRect.bottom;
+                    const viewportHeight = window.innerHeight;
+                    
+                    // If input is below viewport (keyboard might be covering it)
+                    if (inputBottom > viewportHeight - 100) {
+                        // Scroll to make input visible with some padding
+                        const targetScroll = scrollTop + (inputBottom - viewportHeight) + 150;
+                        monitorContent.scrollTo({
+                            top: targetScroll,
+                            behavior: 'smooth'
+                        });
+                    }
+                }, 300);
+            }
+            
+            // Scroll input into view on focus (mobile)
+            inputEl.addEventListener('focus', scrollInputIntoView);
+            inputEl.addEventListener('touchstart', () => {
+                setTimeout(() => inputEl.focus(), 0);
+            });
+
             // Handle input
             inputEl.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
