@@ -1,0 +1,31 @@
+# Приватные файлы проекта
+../notes/
+../attachments/
+../presentations/
+../design/
+../docs/
+../export/
+../media/
+../mvp/
+../refs/
+../research/
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Временные и рабочие файлы
+*.tmp
+*.log
+index-old.html
+todo.md
+all-texts.md
+test-doom.html
+ascii-elements-demo.html
+
+# Контент для разработки (если не нужен в публичной версии)
+Content/
+

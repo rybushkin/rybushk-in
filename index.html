@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>rybushk.in v.4.1</title>
+    <link rel="stylesheet" href="styles-ascii.css">
+    <link rel="stylesheet" href="https://js-dos.com/6.22/current/css/js-dos.css">
+    <style>
+        .monitor.fullscreen {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            border: 3px solid var(--border) !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+        }
+        body:has(.monitor.fullscreen) {
+            padding: 0 !important;
+        }
+        .monitor.minimized {
+            height: auto !important;
+            max-height: none !important;
+        }
+        .monitor.minimized .monitor-content,
+        .monitor.minimized .monitor-footer {
+            display: none !important;
+        }
+        .monitor.closed {
+            display: none !important;
+        }
+        /* Hide native cursor and use custom underscore */
+        .terminal-input {
+            caret-color: transparent;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+        /* Placeholder styling - same size as text, 30% opacity */
+        .terminal-input::placeholder {
+            color: var(--text);
+            opacity: 0.3;
+            font-size: 12px;
+            font-family: 'Courier New', monospace;
+        }
+        /* Terminal input line layout */
+        #terminal-input-line {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        /* Custom underscore cursor */
+        .custom-cursor {
+            position: absolute;
+            animation: blink 1s infinite;
+            color: var(--accent);
+            font-family: 'Courier New', monospace;
+            pointer-events: none;
+            transition: left 0.05s ease;
+        }
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0; }
+        }
+        /* ASCII borders - точное соответствие ширине */
+        .ascii-border-top,
+        .ascii-border-bottom,
+        .ascii-border-divider {
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: hidden !important;
+            white-space: nowrap !important;
+            box-sizing: border-box !important;
+        }
+        .monitor-header,
+        .monitor-footer {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+        /* ASCII Scrollbar */
+        .monitor-content {
+            position: relative;
+        }
+        .ascii-scrollbar {
+            position: absolute;
+            right: 2px;
+            top: 0;
+            bottom: 0;
+            width: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1;
+            color: var(--border);
+            text-shadow: 0 0 5px var(--shadow);
+            pointer-events: none;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 2px 0;
+        }
+        .ascii-scrollbar-track {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .ascii-scrollbar-thumb {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        /* Скрываем стандартный scrollbar */
+        .monitor-content::-webkit-scrollbar {
+            width: 0px;
+            background: transparent;
+        }
+        .monitor-content {
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        /* FluidGlass effect - inspired by @react-bits/FluidGlass-JS-CSS */
+        body.fluid-glass-mode {
+            cursor: default;
+        }
+        #fluid-glass-cursor {
+            position: fixed;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 255, 255, 0.4) 0%,
+                rgba(255, 255, 255, 0.2) 40%,
+                rgba(255, 255, 255, 0.1) 70%,
+                transparent 100%);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            box-shadow: 
+                0 8px 32px 0 rgba(31, 38, 135, 0.37),
+                inset 0 0 60px rgba(255, 255, 255, 0.1),
+                inset 0 0 30px rgba(255, 255, 255, 0.05);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            display: none;
+            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            opacity: 0;
+            will-change: transform, opacity, width, height;
+        }
+        body.fluid-glass-mode #fluid-glass-cursor {
+            display: block;
+            opacity: 1;
+        }
+        #fluid-glass-cursor.hover {
+            width: 240px;
+            height: 240px;
+            background: radial-gradient(circle at 30% 30%, 
+                rgba(255, 255, 255, 0.5) 0%,
+                rgba(255, 255, 255, 0.3) 40%,
+                rgba(255, 255, 255, 0.15) 70%,
+                transparent 100%);
+            backdrop-filter: blur(25px) saturate(200%);
+            -webkit-backdrop-filter: blur(25px) saturate(200%);
+            box-shadow: 
+                0 12px 48px 0 rgba(31, 38, 135, 0.45),
+                inset 0 0 80px rgba(255, 255, 255, 0.15),
+                inset 0 0 40px rgba(255, 255, 255, 0.08);
+        }
+    </style>
+</head>
+<body>
+    <!-- FluidGlass Cursor -->
+    <div id="fluid-glass-cursor"></div>
+    
+    <!-- CRT Scanline Beam -->
+    <div id="crt-scanbeam"></div>
+    
+    <!-- Preloader -->
+    <div id="preloader">
+        <div id="loader-cursor" class="loader-cursor">▊</div>
+        <div class="aquarium-container" id="aquarium-container" style="display: none;"></div>
+        <div id="loader-text" style="margin-top: 20px; color: var(--accent); font-family: 'Courier New', monospace; font-size: 12px; text-align: center; text-shadow: 0 0 5px var(--accent); opacity: 0; transition: opacity 0.5s;"></div>
+    </div>
+
+    <div class="monitor" style="opacity: 0; height: 60vh; max-height: 600px; width: 800px; max-width: 100%;">
+        <div class="monitor-header" style="flex-shrink: 0;">
+            <pre class="ascii-border-top" id="header-border-top"></pre>
+            <div class="header-content-row">
+                <div class="header-left" style="flex: 0 0 auto;">
+                    <div class="logo-header" id="logo-header">rybushk.in</div>
+                    <span class="logo-version" id="header-version">v.4.1</span>
+                </div>
+                <div class="window-controls" style="border: none; padding: 0; margin-left: auto;">
+                    <span title="Minimize" onclick="minimizeWindow()" style="border: none; padding: 0 4px; background: transparent; box-shadow: none;">▼</span>
+                    <span title="Maximize" onclick="toggleFullscreen()" style="border: none; padding: 0 4px; background: transparent; box-shadow: none;">□</span>
+                    <span title="Close" onclick="closeWindow()" style="border: none; padding: 0 4px; background: transparent; box-shadow: none;">×</span>
+                </div>
+            </div>
+            <pre class="ascii-border-divider" id="header-border-divider"></pre>
+        </div>
+
+        <div class="monitor-content" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding: 10px 20px 40px 40px; min-height: 0; position: relative;">
+            <div class="ascii-scrollbar" id="ascii-scrollbar" style="display: none;"></div>
+            <canvas id="game-canvas"></canvas>
+            <section id="hero" class="hero-section" style="position: relative; z-index: 2;">
+                <div>
+                    <div id="terminal-output" class="terminal-text"></div>
+                    <div id="terminal-input-line" style="display: none;">
+                        <span class="terminal-prompt">$ </span><input type="text" id="terminal-input" class="terminal-input" autocomplete="off" spellcheck="false" placeholder="menu / help"><span class="custom-cursor">_</span>
+                    </div>
+                    <div id="game-prompt" class="game-prompt" style="display: none;"></div>
+                    <div id="game-info" class="game-info" style="display: none;"></div>
+                </div>
+            </section>
+        </div>
+
+        <div class="monitor-footer" style="flex-shrink: 0;">
+            <pre class="ascii-border-divider" id="footer-border-divider"></pre>
+            <div class="footer-content-row">
+                <div class="status-left">
+                    <span class="status-ready">● READY</span>
+                    <span class="status-theme" id="status-theme"></span>
+                </div>
+                <div class="status-right" id="status-right">
+                    <span id="load-time"></span>
+                    <span id="session-time"></span>
+                </div>
+            </div>
+            <pre class="ascii-border-bottom" id="footer-border-bottom"></pre>
+            <!-- Theme selector moved to text commands -->
+            <!--
+            <div class="footer-theme-dropdown">
+                <div class="theme-dropdown">
+                    <button class="theme-selector" onclick="toggleThemeMenu()">
+                        <span>THEME:</span>
+                        <span id="current-theme">CLASSIC</span>
+                        <span>▼</span>
+                    </button>
+                    <div class="theme-menu" id="theme-menu">
+                        <button class="theme-option active" onclick="selectTheme('classic', 'CLASSIC')">CLASSIC</button>
+                        <button class="theme-option" onclick="selectTheme('retro', 'RETRO')">RETRO</button>
+                        <button class="theme-option" onclick="selectTheme('cyberpunk', 'CYBERPUNK')">CYBERPUNK</button>
+                        <button class="theme-option" onclick="selectTheme('ubuntu', 'UBUNTU')">UBUNTU</button>
+                        <button class="theme-option" onclick="selectTheme('gameboy', 'GAMEBOY')">GAMEBOY</button>
+                        <button class="theme-option" onclick="selectTheme('excel', 'EXCEL')">EXCEL</button>
+                        <button class="theme-option" onclick="selectTheme('norton', 'NORTON')">NORTON</button>
+                        <button class="theme-option" onclick="selectTheme('monochrome', 'MONOCHROME')">MONOCHROME</button>
+                        <button class="theme-option" onclick="selectTheme('tron', 'TRON')">TRON</button>
+                        <button class="theme-option" onclick="selectTheme('macintosh', 'MACINTOSH')">MACINTOSH</button>
+                    </div>
+                </div>
+            </div>
+            -->
+        </div>
+    </div>
+
+    <button id="restore-button" class="restore-button" onclick="restoreWindow()" title="Restore Terminal">
+        ←
+    </button>
+
+    <div id="doom-container" style="display: none;"></div>
+
+    <!-- Glitch Overlay -->
+    <div id="glitch-overlay">
+        <pre id="glitch-skull"></pre>
+    </div>
+
+    <script src="texts.js"></script>
+    <script src="game-arkanoid.js"></script>
+    <script src="game-doom.js"></script>
+    <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+    <script>
+        // Terminal System
+        let terminalHistory = [];
+        let historyIndex = -1;
+        let commandHistory = [];
+        let terminalReady = false;
+        let waitingForGameResponse = false;
+        let fluidGlassModeActive = false;
+
+        // Fish ASCII art - animated frames
+        const fishFrames = [
+            // Frame 1 - Original
+`           -._|'.
+         _\\  '  '.
+      <'   -.    "-.
+  _|\\    \\ .'    -. -. -.
+  \\  \\  < '       .-.-.-.
+ <  ". _/       ) o( o( o(
+ < )            '-''-'-'-
+ \\_ _/.   .-'_       (
+\\| _-  (-.__.--\\""----' 
+"V"    "V""    "V"`,
+            // Frame 2 - Filled style
+`           ─═▄│▀═
+         ▄▓▒  ▀  ▀═
+      ◄▀   ▄═    ▀═─
+  ▄│▓    ▓ ═▀    ▄═ ▄═ ▄═
+  ▓  ▓  ◄ ▀       ═▄═▄═▄═
+ ◄  ▀═ ▄▓       █ ●│ ●│ ●│
+ ◄ █            ▀─▀▀─▀▀─▀
+ ▓▄ ▄▓═   ═─▀▄       │
+▓│ ▄─  │─═▄▄═──▓▀▀─────▀ 
+▀▼▀    ▀▼▀▀    ▀▼▀`,
+            // Frame 3 - Block style
+`           ══█│▀══
+         █▓░  ▀  ▀═
+      ◄▀   █═    ▀══
+  █│░    ░ ═▀    █═ █═ █═
+  ░  ░  ◄ ▀       ═█═█═█═
+ ◄  ▀═ █░       █ ○│ ○│ ○│
+ ◄ █            ▀═▀▀═▀▀═▀
+ ░█ █░═   ═══█       │
+░│ █═  │══██═══░▀▀══════▀ 
+▀▼▀    ▀▼▀▀    ▀▼▀`,
+            // Frame 4 - Light outline
+`           -._|'.
+         _/  '  '.
+      <'   -.    "-.
+  _|/    / .'    -. -. -.
+  /  /  < '       .-.-.-.
+ <  ". _/       ) ○( ○( ○(
+ < )            '-''-'-'-
+ /_ _/.   .-'_       (
+/| _-  (-.__.--/""----' 
+"V"    "V""    "V"`
+        ];
+
+        let fishFrame = 0;
+        const fishArt = fishFrames[0]; // Для обратной совместимости
+        let fishAnimationInterval = null;
+        let fishArtElement = null;
+
+        // Calculate milliseconds to May 21 (current or next year)
+        function getMsToBirthday() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const birthday = new Date(currentYear, 4, 21); // May 21 (month is 0-indexed)
+            
+            // If birthday has passed this year, use next year
+            if (now > birthday) {
+                birthday.setFullYear(currentYear + 1);
+            }
+            
+            return birthday.getTime() - now.getTime();
+        }
+
+        // Shuffle array function
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Fact(rand) lines - will be shuffled on load
+        const factLines = SiteTexts.facts;
+
+        // Spinner frames
+        const spinnerFrames = ['/', '|', '\\', '-', '■'];
+        let spinnerIndex = 0;
+        let spinnerElement = null;
+        let spinnerInterval = null;
+
+        // Boot sequence
+        function createBootSequence() {
+            const msToBirthday = getMsToBirthday();
+            const shuffledFacts = shuffleArray(factLines);
+            let factIndex = 0;
+
+            return [
+                { text: SiteTexts.boot.earlyConsole, delay: 50, type: true, speed: 20 },
+                { text: SiteTexts.boot.decompressing, delay: 100, type: true, speed: 15 },
+                { text: SiteTexts.boot.booting, delay: 100, type: true, speed: 15 },
+                { text: SiteTexts.boot.init, delay: 30, type: false },
+                { text: '/', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.creativeSubsystem, delay: 30, type: false },
+                { text: '|', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.sarcasmDriver, delay: 30, type: false },
+                { text: '-', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.automationSubsystem, delay: 30, type: false },
+                { text: '\\', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.empathyModule, delay: 30, type: false },
+                { text: '■', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.caffeineService, delay: 30, type: false },
+                { text: '■', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.memory, delay: 30, type: false },
+                { text: SiteTexts.boot.designEngine, delay: 30, type: false },
+                { text: SiteTexts.boot.toolchain, delay: 30, type: false },
+                { text: '/', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.obsidianMemory, delay: 30, type: false },
+                { text: '|', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.freeletics, delay: 30, type: false },
+                { text: '-', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.nutritionTracker, delay: 30, type: false },
+                { text: '\\', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.children, delay: 30, type: false },
+                { text: '■', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.humor, delay: 30, type: false },
+                { text: SiteTexts.boot.realityCheck, delay: 30, type: false },
+                { text: SiteTexts.boot.loadingProjects, delay: 30, type: false },
+                { text: '/', delay: 50, type: false, isSpinner: true },
+                { text: shuffledFacts[factIndex++], delay: 30, type: false },
+                { text: '|', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.aiAssistant, delay: 30, type: false },
+                { text: '-', delay: 50, type: false, isSpinner: true },
+                { text: shuffledFacts[factIndex++], delay: 30, type: false },
+                { text: '\\', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.locale, delay: 30, type: false },
+                { text: '■', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.marketingStack, delay: 30, type: false },
+                { text: SiteTexts.boot.belief, delay: 30, type: false },
+                { text: '/', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.uptime, delay: 30, type: false },
+                { text: '|', delay: 50, type: false, isSpinner: true },
+                { text: `[    3.0000] next_birthday_event: target=May 21; T‑minus=${msToBirthday} ms`, delay: 30, type: false },
+                { text: '-', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.randFact, delay: 30, type: false },
+                { text: '\\', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.motto, delay: 30, type: false },
+                { text: '■', delay: 50, type: false, isSpinner: true },
+                { text: SiteTexts.boot.network, delay: 30, type: false },
+                { text: SiteTexts.boot.cron, delay: 30, type: false },
+                { text: SiteTexts.boot.startupMotd, delay: 30, type: false },
+                { text: shuffledFacts[factIndex++], delay: 30, type: false },
+                { text: SiteTexts.boot.verification, delay: 30, type: false },
+                { text: '', delay: 50, type: false },
+                { text: '', delay: 100, type: false },
+                { text: fishArt, delay: 200, type: true, isAsciiArt: true, speed: 3 },
+                { text: '', delay: 50, type: false },
+                { text: '', delay: 100, type: false },
+                { text: SiteTexts.boot.loginPrompt, delay: 200, type: true, speed: 15 },
+                { text: '', delay: 50, type: false },
+                { text: '', delay: 50, type: false }
+            ];
+        }
+
+        const bootSequence = createBootSequence();
+
+        // Тracks the actual printed content height to prevent infinite scrolling
+        let maxAllowedScrollHeight = 0;
+        let isTypingActive = false;
+
+        // Получает реальную высоту напечатанного контента
+        function getActualContentHeight() {
+            const terminalOutput = document.getElementById('terminal-output');
+            if (!terminalOutput) return 0;
+            
+            // Используем scrollHeight элемента terminal-output для точного измерения
+            // Это учитывает все содержимое, включая margins, line-heights и т.д.
+            const terminalHeight = terminalOutput.scrollHeight;
+            
+            // Добавляем padding контейнера monitor-content
+            const monitorContent = document.querySelector('.monitor-content');
+            if (monitorContent) {
+                const style = window.getComputedStyle(monitorContent);
+                const paddingTop = parseFloat(style.paddingTop) || 0;
+                const paddingBottom = parseFloat(style.paddingBottom) || 0;
+                return terminalHeight + paddingTop + paddingBottom;
+            }
+            
+            return terminalHeight;
+        }
+
+        // Ограничивает скролл до максимально допустимой высоты контента
+        function clampScrollPosition() {
+            // Не ограничиваем скролл во время игры
+            if ((typeof gameRunning !== 'undefined' && gameRunning) || 
+                (typeof gameWaitingForStart !== 'undefined' && gameWaitingForStart)) {
+                return;
+            }
+            
+            const monitorContent = document.querySelector('.monitor-content');
+            if (!monitorContent) return;
+            
+            // Получаем реальную высоту напечатанного контента
+            const actualHeight = getActualContentHeight();
+            const clientHeight = monitorContent.clientHeight;
+            
+            // Максимальная допустимая высота скролла = реальная высота контента
+            maxAllowedScrollHeight = Math.max(maxAllowedScrollHeight, actualHeight);
+            
+            // Вычисляем максимальный допустимый scrollTop
+            const maxScrollTop = Math.max(0, maxAllowedScrollHeight - clientHeight);
+            
+            // Если текущий scrollTop превышает максимум, ограничиваем его
+            if (monitorContent.scrollTop > maxScrollTop) {
+                monitorContent.scrollTop = maxScrollTop;
+            }
+        }
+
+        // Проверяет, находится ли пользователь внизу (или близко к низу)
+        function isNearBottom(threshold = 50) {
+            const monitorContent = document.querySelector('.monitor-content');
+            if (!monitorContent) return true;
+            
+            const scrollHeight = monitorContent.scrollHeight;
+            const clientHeight = monitorContent.clientHeight;
+            const scrollTop = monitorContent.scrollTop;
+            
+            // Если контент не переполняется, считаем что внизу
+            if (scrollHeight <= clientHeight) return true;
+            
+            // Проверяем, находится ли скролл близко к низу (в пределах threshold пикселей)
+            const maxScroll = scrollHeight - clientHeight;
+            return (maxScroll - scrollTop) <= threshold;
+        }
+        
+        function appendOutput(text, className = '') {
+            const outputEl = document.getElementById('terminal-output');
+            const line = document.createElement('div');
+            if (className) line.className = className;
+            // FIX: Добавляем неразрывный пробел для пустых строк, чтобы они отображались
+            line.textContent = text || '\u00A0';  // \u00A0 = неразрывный пробел
+            outputEl.appendChild(line);
+            
+            // Ограничиваем скролл до реальной высоты контента (только если не игра)
+            requestAnimationFrame(() => {
+                // Не ограничиваем скролл во время игры
+                if ((typeof gameRunning === 'undefined' || !gameRunning) && 
+                    (typeof gameWaitingForStart === 'undefined' || !gameWaitingForStart)) {
+                    clampScrollPosition();
+                    
+                    const monitorContent = document.querySelector('.monitor-content');
+                    if (monitorContent) {
+                        // Во время активной печати всегда скроллим вниз, чтобы активная строка была видна
+                        if (isTypingActive) {
+                            // Используем реальную высоту контента вместо scrollHeight
+                            const actualHeight = getActualContentHeight();
+                            const clientHeight = monitorContent.clientHeight;
+                            const maxScrollTop = Math.max(0, actualHeight - clientHeight);
+                            monitorContent.scrollTop = maxScrollTop;
+                            
+                            // Обновляем максимальную допустимую высоту
+                            maxAllowedScrollHeight = Math.max(maxAllowedScrollHeight, actualHeight);
+                        } else {
+                            // Если не печатаем, всегда скроллим вниз при добавлении нового текста
+                            // чтобы показать новый контент
+                            const actualHeight = getActualContentHeight();
+                            const clientHeight = monitorContent.clientHeight;
+                            const maxScrollTop = Math.max(0, actualHeight - clientHeight);
+                            monitorContent.scrollTop = maxScrollTop;
+                            
+                            // Обновляем максимальную допустимую высоту
+                            maxAllowedScrollHeight = Math.max(maxAllowedScrollHeight, actualHeight);
+                        }
+                    }
+                } else {
+                    // Во время игры обновляем скроллбар
+                    updateAsciiScrollbar();
+                }
+            });
+            
+            return line;
+        }
+        
+        function updateAsciiScrollbar() {
+            const monitorContent = document.querySelector('.monitor-content');
+            const scrollbar = document.getElementById('ascii-scrollbar');
+            if (!monitorContent || !scrollbar) return;
+            
+            // Используем requestAnimationFrame для более точного расчета после рендеринга
+            requestAnimationFrame(() => {
+                const scrollHeight = monitorContent.scrollHeight;
+                const clientHeight = monitorContent.clientHeight;
+                const scrollTop = monitorContent.scrollTop;
+                
+                // Если контент не переполняется, скрываем scrollbar
+                if (scrollHeight <= clientHeight + 1) { // +1 для учета погрешностей
+                    scrollbar.style.display = 'none';
+                    return;
+                }
+                
+                scrollbar.style.display = 'flex';
+                
+                // Вычисляем позицию и размер thumb
+                const maxScroll = scrollHeight - clientHeight;
+                const scrollRatio = maxScroll > 0 ? scrollTop / maxScroll : 0;
+                const thumbRatio = clientHeight / scrollHeight;
+                const trackHeight = clientHeight - 4; // минус padding
+                const thumbHeight = Math.max(3, Math.floor(trackHeight * thumbRatio));
+                const thumbTop = Math.min(trackHeight - thumbHeight, Math.floor(trackHeight * scrollRatio));
+                
+                // Генерируем ASCII scrollbar
+                let scrollbarHTML = '';
+                
+                // Верхняя часть (до thumb)
+                for (let i = 0; i < thumbTop; i++) {
+                    scrollbarHTML += '<div style="line-height: 1;">│</div>';
+                }
+                
+                // Thumb (видимая часть)
+                scrollbarHTML += '<div class="ascii-scrollbar-thumb" style="line-height: 1;">';
+                for (let i = 0; i < thumbHeight; i++) {
+                    if (i === 0) {
+                        scrollbarHTML += '<div>█</div>';
+                    } else if (i === thumbHeight - 1) {
+                        scrollbarHTML += '<div>█</div>';
+                    } else {
+                        scrollbarHTML += '<div>▓</div>';
+                    }
+                }
+                scrollbarHTML += '</div>';
+                
+                // Нижняя часть (после thumb)
+                const remaining = Math.max(0, trackHeight - thumbTop - thumbHeight);
+                for (let i = 0; i < remaining; i++) {
+                    scrollbarHTML += '<div style="line-height: 1;">│</div>';
+                }
+                
+                scrollbar.innerHTML = '<div class="ascii-scrollbar-track">' + scrollbarHTML + '</div>';
+            });
+        }
+
+        function typeText(text, element, callback, speed = 20) {
+            let index = 0;
+            element.innerHTML = '';
+            
+            // Mark typing as active
+            isTypingActive = true;
+            
+            // Create cursor element - квадратик, который двигается с текстом
+            const cursor = document.createElement('span');
+            cursor.className = 'typing-cursor';
+            cursor.textContent = '▊';
+            cursor.style.animation = 'blink 1s infinite';
+            cursor.style.color = 'var(--accent)';
+            cursor.style.display = 'inline';
+            cursor.style.marginLeft = '0';
+            element.appendChild(cursor);
+            
+            // Track time for background-resistant typing
+            let lastTime = Date.now();
+            let accumulatedDelay = 0;
+            
+            function typeChar() {
+                if (index < text.length) {
+                    // Check if we're significantly behind (throttled by browser)
+                    const currentTime = Date.now();
+                    const elapsed = currentTime - lastTime;
+                    
+                    // If elapsed time is much longer than expected (e.g., tab was backgrounded),
+                    // type multiple characters to catch up
+                    if (elapsed > speed * 5) {
+                        // Catch up by typing multiple characters
+                        const charsToType = Math.min(Math.floor(elapsed / speed), text.length - index);
+                        for (let i = 0; i < charsToType && index < text.length; i++) {
+                            const textNode = document.createTextNode(text[index]);
+                            element.insertBefore(textNode, cursor);
+                            index++;
+                        }
+                    } else {
+                        // Normal typing
+                        const textNode = document.createTextNode(text[index]);
+                        element.insertBefore(textNode, cursor);
+                        index++;
+                    }
+                    
+                    lastTime = currentTime;
+                    
+                    // Во время печати всегда скроллим вниз, чтобы активная строка была видна
+                    requestAnimationFrame(() => {
+                        // Не ограничиваем скролл во время игры
+                        if ((typeof gameRunning === 'undefined' || !gameRunning) && 
+                            (typeof gameWaitingForStart === 'undefined' || !gameWaitingForStart)) {
+                            clampScrollPosition();
+                            
+                            // Во время активной печати всегда скроллим вниз
+                            const monitorContent = document.querySelector('.monitor-content');
+                            if (monitorContent) {
+                                // Используем реальную высоту контента
+                                const actualHeight = getActualContentHeight();
+                                const clientHeight = monitorContent.clientHeight;
+                                const maxScrollTop = Math.max(0, actualHeight - clientHeight);
+                                monitorContent.scrollTop = maxScrollTop;
+                                
+                                // Обновляем максимальную допустимую высоту
+                                maxAllowedScrollHeight = Math.max(maxAllowedScrollHeight, actualHeight);
+                            }
+                        }
+                    });
+                    
+                    setTimeout(typeChar, speed);
+                } else {
+                    // Mark typing as inactive
+                    isTypingActive = false;
+                    
+                    // Remove cursor when done
+                    if (element.contains(cursor)) {
+                        element.removeChild(cursor);
+                    }
+                    
+                    // После завершения печати скроллим вниз, чтобы показать результат
+                    requestAnimationFrame(() => {
+                        // Не ограничиваем скролл во время игры
+                        if ((typeof gameRunning === 'undefined' || !gameRunning) && 
+                            (typeof gameWaitingForStart === 'undefined' || !gameWaitingForStart)) {
+                            clampScrollPosition();
+                            
+                            // После завершения печати скроллим вниз
+                            const monitorContent = document.querySelector('.monitor-content');
+                            if (monitorContent) {
+                                // Используем реальную высоту контента
+                                const actualHeight = getActualContentHeight();
+                                const clientHeight = monitorContent.clientHeight;
+                                const maxScrollTop = Math.max(0, actualHeight - clientHeight);
+                                monitorContent.scrollTop = maxScrollTop;
+                                
+                                // Обновляем максимальную допустимую высоту
+                                maxAllowedScrollHeight = Math.max(maxAllowedScrollHeight, actualHeight);
+                            }
+                        } else {
+                            // Во время игры обновляем скроллбар
+                            updateAsciiScrollbar();
+                        }
+                    });
+                    
+                    if (callback) callback();
+                }
+            }
+            
+            typeChar();
+        }
+
+        // Function to type text with animation (no loaders)
+        function typeTextWithLoader(lines, callback, speed = 20) {
+            let lineIndex = 0;
+
+            function processNextLine() {
+                if (lineIndex >= lines.length) {
+                    if (callback) callback();
+                    return;
+                }
+
+                const line = lines[lineIndex];
+                if (line === '') {
+                    // Empty line
+                    appendOutput('');
+                    lineIndex++;
+                    setTimeout(processNextLine, 50);
+                } else {
+                    // Type the line directly
+                    const outputLine = appendOutput('');
+                    typeText(line, outputLine, () => {
+                        lineIndex++;
+                        setTimeout(processNextLine, 100);
+                    }, speed);
+                }
+            }
+
+            processNextLine();
+        }
+
+        function startFishAnimation() {
+            // Останавливаем предыдущую анимацию, если она есть
+            if (fishAnimationInterval) {
+                clearInterval(fishAnimationInterval);
+            }
+            
+            // Сбрасываем кадр на первый
+            fishFrame = 0;
+            
+            // Функция для обновления кадра
+            function animateFish() {
+                if (fishArtElement && fishFrames.length > 0) {
+                    fishArtElement.textContent = fishFrames[fishFrame];
+                    fishFrame = (fishFrame + 1) % fishFrames.length;
+                }
+            }
+            
+            // Запускаем анимацию с интервалом 300ms (можно настроить скорость)
+            fishAnimationInterval = setInterval(animateFish, 300);
+        }
+
+        function stopFishAnimation() {
+            if (fishAnimationInterval) {
+                clearInterval(fishAnimationInterval);
+                fishAnimationInterval = null;
+            }
+        }
+
+        function startSpinner() {
+            // Create spinner line if it doesn't exist
+            if (!spinnerElement) {
+                spinnerElement = appendOutput('');
+            }
+            // Update spinner frame immediately
+            updateSpinner();
+        }
+
+        function updateSpinner() {
+            if (spinnerElement) {
+                // Sometimes show ■ instead of cycling frame
+                const showSquare = Math.random() < 0.2; // 20% chance
+                if (showSquare) {
+                    spinnerElement.textContent = '■';
+                } else {
+                    // Cycle through frames
+                    spinnerElement.textContent = spinnerFrames[spinnerIndex];
+                    spinnerIndex = (spinnerIndex + 1) % spinnerFrames.length;
+                }
+            }
+        }
+
+        function stopSpinner() {
+            if (spinnerInterval) {
+                clearInterval(spinnerInterval);
+                spinnerInterval = null;
+            }
+            // Clear spinner element but keep the line
+            if (spinnerElement) {
+                spinnerElement.textContent = '';
+            }
+        }
+
+        let bootSkipped = false;
+        
+        // Обработчик скипа boot sequence
+        function handleBootSkip(e) {
+            if (e.key === ' ' || e.key === 'Enter') {
+                if (!terminalReady && !bootSkipped) {
+                    bootSkipped = true;
+                    e.preventDefault();
+                    // Очищаем вывод
+                    document.getElementById('terminal-output').innerHTML = '';
+                    stopSpinner();
+                    stopFishAnimation();
+                    // Показываем промпт
+                    document.getElementById('terminal-input-line').style.display = 'flex';
+                    document.getElementById('terminal-input').focus();
+                    terminalReady = true;
+                    // Убираем обработчик
+                    document.removeEventListener('keydown', handleBootSkip);
+                }
+            }
+        }
+        
+        // Добавляем обработчик скипа
+        document.addEventListener('keydown', handleBootSkip);
+
+        function runBootSequence(index = 0) {
+            if (bootSkipped) {
+                return;
+            }
+            
+            if (index >= bootSequence.length) {
+                // Boot complete, stop spinner and show prompt
+                stopSpinner();
+                document.getElementById('terminal-input-line').style.display = 'flex';
+                document.getElementById('terminal-input').focus();
+                terminalReady = true;
+                document.removeEventListener('keydown', handleBootSkip);
+                return;
+            }
+
+            const { text, delay, type, isAsciiArt, isSpinner, speed } = bootSequence[index];
+            
+            if (isAsciiArt) {
+                // ASCII art with accent color - type character by character
+                const outputEl = document.getElementById('terminal-output');
+                const artDiv = document.createElement('pre');
+                artDiv.style.color = 'var(--accent)';
+                artDiv.style.margin = '0';
+                artDiv.style.padding = '0';
+                artDiv.style.lineHeight = '1.1';
+                artDiv.style.fontSize = '14px';
+                artDiv.style.fontWeight = 'bold';
+                outputEl.appendChild(artDiv);
+                
+                // Сохраняем ссылку на элемент для анимации
+                fishArtElement = artDiv;
+                
+                typeText(text, artDiv, () => {
+                    // Запускаем анимацию после завершения печати
+                    startFishAnimation();
+                    const monitorContent = document.querySelector('.monitor-content');
+                    if (monitorContent && isNearBottom()) {
+                        monitorContent.scrollTop = monitorContent.scrollHeight;
+                    }
+                    setTimeout(updateAsciiScrollbar, 10);
+                    setTimeout(() => runBootSequence(index + 1), delay);
+                }, speed || 3);
+            } else if (isSpinner) {
+                // Start or continue spinner animation
+                startSpinner();
+                setTimeout(() => runBootSequence(index + 1), delay);
+            } else if (type) {
+                // Type text character by character
+                const line = appendOutput('');
+                typeText(text, line, () => {
+                    setTimeout(() => runBootSequence(index + 1), delay);
+                }, speed || 20);
+            } else {
+                // Instant output
+                appendOutput(text);
+                setTimeout(() => runBootSequence(index + 1), delay);
+            }
+        }
+
+        // Command handlers
+        const commands = {
+            about: () => {
+                appendOutput('$ about', 'terminal-prompt');
+                appendOutput('');
+                typeTextWithLoader(SiteTexts.commands.about, null, 15);
+            },
+            clients: () => {
+                appendOutput('$ clients', 'terminal-prompt');
+                appendOutput('');
+                typeTextWithLoader(SiteTexts.commands.clients, null, 15);
+            },
+            client: () => {
+                // Alias for clients
+                commands.clients();
+            },
+            works: () => {
+                appendOutput('$ works', 'terminal-prompt');
+                appendOutput('');
+                typeTextWithLoader(SiteTexts.commands.works, null, 15);
+            },
+            projects: () => {
+                // Alias for works
+                commands.works();
+            },
+            contacts: () => {
+                appendOutput('$ contacts', 'terminal-prompt');
+                appendOutput('');
+                const contactLines = SiteTexts.commands.contacts;
+                let lineIndex = 0;
+                
+                function processContactLine() {
+                    if (lineIndex >= contactLines.length) {
+                        return;
+                    }
+                    
+                    const line = contactLines[lineIndex];
+                    if (line === '') {
+                        appendOutput('');
+                        lineIndex++;
+                        setTimeout(processContactLine, 50);
+                    } else if (line === 'Download CV (.pdf)') {
+                        // Create link for CV
+                        const outputLine = appendOutput('');
+                        const link = document.createElement('a');
+                        link.href = '/cv.pdf'; // Update this path to your actual CV file
+                        link.textContent = 'Download CV (.pdf)';
+                        link.style.color = 'var(--md-link)';
+                        link.style.textDecoration = 'underline';
+                        link.style.textShadow = '0 0 5px var(--md-link)';
+                        link.target = '_blank';
+                        typeText('Download CV (.pdf)', outputLine, () => {
+                            outputLine.innerHTML = '';
+                            outputLine.appendChild(link);
+                            lineIndex++;
+                            setTimeout(processContactLine, 100);
+                        }, 20);
+                    } else {
+                        const outputLine = appendOutput('');
+                        typeText(line, outputLine, () => {
+                            lineIndex++;
+                            setTimeout(processContactLine, 100);
+                        }, 20);
+                    }
+                }
+                
+                processContactLine();
+            },
+            game: () => {
+                appendOutput('$ game', 'terminal-prompt');
+                appendOutput('');
+                
+                // Show intro text
+                typeTextWithLoader(SiteTexts.commands.game.intro, () => {
+                    // Wait for user input (y/n)
+                    waitForGameStart();
+                }, 20);
+            },
+            doom: () => {
+                appendOutput('$ doom', 'terminal-prompt');
+                appendOutput('');
+                typeTextWithLoader([
+                    'Launching: DOOM (1993)...',
+                    '--------------------------------------------',
+                    'The classic first-person shooter.',
+                    '  ESC to exit, arrow keys to move,',
+                    '  Ctrl to shoot, Space to use/open.',
+                    '',
+                    'Loading...'
+                ], () => {
+                    startDoom();
+                }, 20);
+            },
+            theme: (themeName) => {
+                appendOutput('$ theme' + (themeName ? ' ' + themeName : ''), 'terminal-prompt');
+                appendOutput('');
+                
+                if (themeName && SiteTexts.themes[themeName.toLowerCase()]) {
+                    // Apply theme
+                    setTheme(themeName.toLowerCase());
+                    typeTextWithLoader([
+                        `Theme changed to ${SiteTexts.themes[themeName.toLowerCase()]}.`,
+                        ''
+                    ], null, 20);
+                } else {
+                    // Show list of themes
+                    typeTextWithLoader([
+                        SiteTexts.commands.theme.description,
+                        '',
+                        'Available themes:',
+                        ...SiteTexts.commands.theme.themes,
+                        '',
+                        SiteTexts.commands.theme.usage,
+                        SiteTexts.commands.theme.example,
+                        ''
+                    ], null, 20);
+                }
+            },
+            help: () => {
+                appendOutput('$ help', 'terminal-prompt');
+                appendOutput('');
+                SiteTexts.commands.help.forEach(line => appendOutput(line));
+            },
+            menu: () => {
+                appendOutput('$ menu', 'terminal-prompt');
+                appendOutput('');
+                SiteTexts.commands.menu.forEach(line => appendOutput(line));
+            },
+            clear: () => {
+                document.getElementById('terminal-output').innerHTML = '';
+                stopFishAnimation();
+                fishArtElement = null;
+                stopSpinner();
+                spinnerElement = null;
+            },
+            glass: () => {
+                appendOutput('$ glass', 'terminal-prompt');
+                appendOutput('');
+                toggleFluidGlassMode();
+            },
+            exit: () => {
+                appendOutput('$ exit', 'terminal-prompt');
+                appendOutput('');
+                closeWindow();
+            }
+        };
+
+        function handleCommand(cmd) {
+            const trimmed = cmd.trim();
+            
+            if (!trimmed) {
+                return;
+            }
+
+            // Add to history
+            commandHistory.push(trimmed);
+            historyIndex = commandHistory.length;
+
+            // Parse command and arguments
+            const parts = trimmed.split(/\s+/);
+            const commandName = parts[0].toLowerCase();
+            const args = parts.slice(1).join(' ');
+
+            // Execute command
+            if (commands[commandName]) {
+                if (typeof commands[commandName] === 'function') {
+                    // Check if command accepts arguments
+                    if (commandName === 'theme' && args) {
+                        commands[commandName](args);
+                    } else {
+                        commands[commandName]();
+                    }
+                }
+            } else {
+                appendOutput(`$ ${trimmed}`, 'terminal-prompt');
+                appendOutput('');
+                appendOutput(`Command not found: ${commandName}`);
+                appendOutput('Type "help" for available commands.');
+                appendOutput('');
+            }
+            
+            // Force scroll to bottom after command execution
+            setTimeout(() => {
+                const monitorContent = document.querySelector('.monitor-content');
+                if (monitorContent) {
+                    monitorContent.scrollTop = monitorContent.scrollHeight;
+                }
+            }, 100);
+        }
+
+        function initTerminal() {
+            const inputEl = document.getElementById('terminal-input');
+            const outputEl = document.getElementById('terminal-output');
+            const cursorEl = document.querySelector('.custom-cursor');
+            
+            // Clear output
+            outputEl.innerHTML = '';
+            
+            // Run boot sequence
+            runBootSequence();
+            
+            // Update cursor position based on input text width
+            let cursorUpdateQueued = false;
+            function updateCursorPosition() {
+                if (!inputEl || !cursorEl) return;
+                
+                if (!cursorUpdateQueued) {
+                    cursorUpdateQueued = true;
+                    requestAnimationFrame(() => {
+                        // Get the prompt element width
+                        const promptEl = document.querySelector('.terminal-prompt');
+                        let promptWidth = 0;
+                        if (promptEl) {
+                            promptWidth = promptEl.getBoundingClientRect().width;
+                        }
+                        
+                        // Create a temporary span to measure text width
+                        const measurer = document.createElement('span');
+                        measurer.style.visibility = 'hidden';
+                        measurer.style.position = 'absolute';
+                        measurer.style.whiteSpace = 'pre';
+                        measurer.style.font = window.getComputedStyle(inputEl).font;
+                        measurer.textContent = inputEl.value || '';
+                        document.body.appendChild(measurer);
+                        
+                        const textWidth = measurer.getBoundingClientRect().width;
+                        document.body.removeChild(measurer);
+                        
+                        // Position cursor after text (prompt width + text width)
+                        cursorEl.style.left = (promptWidth + textWidth) + 'px';
+                        cursorUpdateQueued = false;
+                    });
+                }
+            }
+            
+            // Update cursor on input
+            inputEl.addEventListener('input', updateCursorPosition);
+            inputEl.addEventListener('keyup', updateCursorPosition);
+            
+            // Initial cursor position
+            setTimeout(updateCursorPosition, 0);
+
+            // Handle input
+            inputEl.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    const cmd = inputEl.value.trim();
+                    inputEl.value = '';
+                    updateCursorPosition(); // Reset cursor position
+                    
+                    // Check if waiting for game response or player name
+                    if (waitingForGameResponse || window.waitingForPlayerName) {
+                        handleGameResponse(cmd);
+                        return;
+                    }
+                    
+                    handleCommand(cmd);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    if (historyIndex > 0) {
+                        historyIndex--;
+                        inputEl.value = commandHistory[historyIndex];
+                        updateCursorPosition();
+                    }
+                } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    if (historyIndex < commandHistory.length - 1) {
+                        historyIndex++;
+                        inputEl.value = commandHistory[historyIndex];
+                        updateCursorPosition();
+                    } else {
+                        historyIndex = commandHistory.length;
+                        inputEl.value = '';
+                        updateCursorPosition();
+                    }
+                }
+            });
+
+            // Focus on click anywhere
+            document.querySelector('.monitor-content').addEventListener('click', () => {
+                if (terminalReady && !gameRunning && !gameWaitingForStart) {
+                    inputEl.focus();
+                }
+            });
+        }
+
+        // Window control functions
+        function minimizeWindow() {
+            const monitor = document.querySelector('.monitor');
+            const minimizeButton = event.currentTarget;
+            monitor.classList.toggle('minimized');
+            
+            // Toggle triangle icon
+            if (monitor.classList.contains('minimized')) {
+                minimizeButton.textContent = '▲';
+                minimizeButton.title = 'Restore';
+            } else {
+                minimizeButton.textContent = '▼';
+                minimizeButton.title = 'Minimize';
+            }
+        }
+
+        function toggleFullscreen() {
+            const monitor = document.querySelector('.monitor');
+            monitor.classList.toggle('fullscreen');
+        }
+
+        function closeWindow() {
+            window.location.href = '404.html';
+        }
+
+        function restoreWindow() {
+            const monitor = document.querySelector('.monitor');
+            monitor.classList.remove('closed');
+            const restoreButton = document.getElementById('restore-button');
+            if (restoreButton) {
+                restoreButton.style.display = 'none';
+            }
+        }
+
+        // Theme functions
+        function toggleThemeMenu() {
+            document.getElementById('theme-menu').classList.toggle('open');
+        }
+
+        function selectTheme(theme, themeName) {
+            setTheme(theme);
+            // Theme selector moved to text commands
+            // document.getElementById('current-theme').textContent = themeName;
+            
+            // document.querySelectorAll('.theme-option').forEach(opt => opt.classList.remove('active'));
+            // event.target.classList.add('active');
+            // document.getElementById('theme-menu').classList.remove('open');
+        }
+
+        function setTheme(theme) {
+            const themes = {
+                classic: { 
+                    bg: '#000000', text: '#00ff00', accent: '#00ff00', border: '#00ff00', glow: '0 0 5px #00ff00',
+                    mdHeading: '#00ffff', mdLink: '#00aaff', mdCode: '#ffff00', mdQuote: '#888888',
+                    mdList: '#00ff88', mdStrong: '#ffffff', mdEm: '#88ff88', mdMenu: '#ffaa00', mdAbout: '#88aaff'
+                },
+                retro: { 
+                    bg: '#1a0f00', text: '#ff9500', accent: '#ff9500', border: '#ff9500', glow: '0 0 8px #ff9500',
+                    mdHeading: '#ffcc00', mdLink: '#ffaa44', mdCode: '#ffff88', mdQuote: '#aa8844',
+                    mdList: '#ffbb66', mdStrong: '#ffffff', mdEm: '#ffdd99', mdMenu: '#ff8800', mdAbout: '#ffaa66'
+                },
+                cyberpunk: { 
+                    bg: '#0d0221', text: '#00ffff', accent: '#ff00ff', border: '#00ffff', glow: '0 0 10px currentColor',
+                    mdHeading: '#00ffff', mdLink: '#00aaff', mdCode: '#ffff00', mdQuote: '#8888ff',
+                    mdList: '#00ff88', mdStrong: '#ffffff', mdEm: '#88ffff', mdMenu: '#ff00ff', mdAbout: '#8888ff'
+                },
+                ubuntu: { 
+                    bg: '#300a24', text: '#ffffff', accent: '#e95420', border: '#e95420', glow: '0 0 3px #e95420',
+                    mdHeading: '#ff8844', mdLink: '#ffaa66', mdCode: '#ffff88', mdQuote: '#aa8866',
+                    mdList: '#ffaa44', mdStrong: '#ffffff', mdEm: '#ffccaa', mdMenu: '#e95420', mdAbout: '#ffaa66'
+                },
+                gameboy: { 
+                    bg: '#9bbc0f', text: '#0f380f', accent: '#306230', border: '#0f380f', glow: '0 0 3px #0f380f',
+                    mdHeading: '#0f380f', mdLink: '#306230', mdCode: '#8bac0f', mdQuote: '#556622',
+                    mdList: '#306230', mdStrong: '#0f380f', mdEm: '#8bac0f', mdMenu: '#306230', mdAbout: '#556622'
+                },
+                excel: { 
+                    bg: '#c0c0c0', text: '#000000', accent: '#003399', border: '#808080', glow: 'none',
+                    mdHeading: '#003399', mdLink: '#0066cc', mdCode: '#cc6600', mdQuote: '#666666',
+                    mdList: '#006600', mdStrong: '#000000', mdEm: '#333333', mdMenu: '#cc6600', mdAbout: '#0066cc'
+                },
+                norton: { 
+                    bg: '#0000aa', text: '#00ffff', accent: '#ffff00', border: '#00ffff', glow: '0 0 5px #00ffff',
+                    mdHeading: '#00ffff', mdLink: '#00aaff', mdCode: '#ffff00', mdQuote: '#8888ff',
+                    mdList: '#00ff88', mdStrong: '#ffffff', mdEm: '#88ffff', mdMenu: '#ffff00', mdAbout: '#8888ff'
+                },
+                monochrome: { 
+                    bg: '#1a1a1a', text: '#b0b0b0', accent: '#e0e0e0', border: '#808080', glow: '0 0 8px #808080',
+                    mdHeading: '#e0e0e0', mdLink: '#c0c0c0', mdCode: '#ffffff', mdQuote: '#888888',
+                    mdList: '#d0d0d0', mdStrong: '#ffffff', mdEm: '#c0c0c0', mdMenu: '#e0e0e0', mdAbout: '#c0c0c0'
+                },
+                tron: { 
+                    bg: '#000000', text: '#6fc3df', accent: '#00d9ff', border: '#00d9ff', glow: '0 0 15px #00d9ff',
+                    mdHeading: '#00d9ff', mdLink: '#00aaff', mdCode: '#ffff00', mdQuote: '#8888ff',
+                    mdList: '#00ff88', mdStrong: '#ffffff', mdEm: '#88ffff', mdMenu: '#00d9ff', mdAbout: '#8888ff'
+                },
+                macintosh: { 
+                    bg: '#c0c0c0', text: '#000000', accent: '#000000', border: '#000000', glow: 'none', dim: '#404040',
+                    mdHeading: '#000000', mdLink: '#000000', mdCode: '#000000', mdQuote: '#404040',
+                    mdList: '#000000', mdStrong: '#000000', mdEm: '#404040', mdMenu: '#000000', mdAbout: '#000000'
+                }
+            };
+
+            const t = themes[theme];
+            document.documentElement.style.setProperty('--bg', t.bg);
+            document.documentElement.style.setProperty('--text', t.text);
+            document.documentElement.style.setProperty('--fg', t.text); // Also set --fg for CSS compatibility
+            document.documentElement.style.setProperty('--accent', t.accent);
+            document.documentElement.style.setProperty('--border', t.border);
+            document.documentElement.style.setProperty('--glow', t.glow);
+            if (t.dim) {
+                document.documentElement.style.setProperty('--dim', t.dim);
+            }
+            // Set markdown colors
+            document.documentElement.style.setProperty('--md-heading', t.mdHeading);
+            document.documentElement.style.setProperty('--md-link', t.mdLink);
+            document.documentElement.style.setProperty('--md-code', t.mdCode);
+            document.documentElement.style.setProperty('--md-quote', t.mdQuote);
+            document.documentElement.style.setProperty('--md-list', t.mdList);
+            document.documentElement.style.setProperty('--md-strong', t.mdStrong);
+            document.documentElement.style.setProperty('--md-em', t.mdEm);
+            document.documentElement.style.setProperty('--md-menu', t.mdMenu);
+            document.documentElement.style.setProperty('--md-about', t.mdAbout);
+        }
+
+        // Close theme menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const dropdown = document.querySelector('.theme-dropdown');
+            const menu = document.getElementById('theme-menu');
+            if (dropdown && !dropdown.contains(event.target)) {
+                menu.classList.remove('open');
+            }
+        });
+
+        function initPreloader() {
+            const preloader = document.getElementById('preloader');
+            const cursor = document.getElementById('loader-cursor');
+            const container = document.getElementById('aquarium-container');
+            
+            if (!preloader || !cursor || !container) {
+                console.error('Preloader elements not found');
+                return;
+            }
+            
+            // Сначала показываем мигающий курсор (1 секунда)
+            setTimeout(() => {
+                // Скрываем курсор
+                cursor.style.display = 'none';
+                
+                // Показываем контейнер для рыбки
+                container.style.display = 'block';
+                container.style.fontFamily = "'Courier New', monospace";
+                container.style.fontSize = "14px";
+                container.style.lineHeight = "1.1";
+                container.style.color = "var(--accent)";
+                container.style.textShadow = "0 0 10px var(--accent)";
+                container.style.whiteSpace = "pre";
+                container.style.textAlign = "center";
+                container.innerHTML = ''; // Очищаем контейнер
+                
+                // Быстро рисуем рыбку (символ за символом, быстро)
+                // Используем fishArt из fishFrames[0]
+                const fishLines = fishArt.split('\n');
+                let lineIndex = 0;
+                let charIndex = 0;
+                const speed = 3; // миллисекунды на символ (быстрее)
+                
+                function drawFish() {
+                    if (lineIndex >= fishLines.length) {
+                        // Рыбка нарисована, скрываем её
+                        container.style.opacity = '0';
+                        container.style.transition = 'opacity 0.3s';
+                        
+                        // Показываем предупреждение в центре
+                        const loaderTextEl = document.getElementById('loader-text');
+                        if (loaderTextEl && SiteTexts && SiteTexts.loader) {
+                            // Извлекаем только предупреждение из текста
+                            const loaderText = SiteTexts.loader;
+                            const lines = loaderText.split('\n');
+                            const warningStartIndex = lines.findIndex(line => line.includes('WARNING'));
+                            
+                            if (warningStartIndex !== -1) {
+                                // Берем только строки с предупреждением
+                                const warningLines = lines.slice(warningStartIndex);
+                                loaderTextEl.innerHTML = warningLines.map(line => {
+                                    return `<div style="color: #ff6b6b; text-shadow: 0 0 15px #ff6b6b, 0 0 30px #ff6b6b; font-weight: bold; margin: 2px 0;">${line}</div>`;
+                                }).join('');
+                            } else {
+                                loaderTextEl.textContent = '⚠ WARNING: All texts and content generated by AI ⚠';
+                            }
+                            
+                            // Центрируем и делаем больше
+                            loaderTextEl.style.position = 'absolute';
+                            loaderTextEl.style.top = '50%';
+                            loaderTextEl.style.left = '50%';
+                            loaderTextEl.style.transform = 'translate(-50%, -50%)';
+                            loaderTextEl.style.marginTop = '0';
+                            loaderTextEl.style.fontSize = '16px';
+                            loaderTextEl.style.textAlign = 'center';
+                            loaderTextEl.style.whiteSpace = 'pre';
+                            loaderTextEl.style.lineHeight = '1.6';
+                            loaderTextEl.style.zIndex = '100001';
+                            
+                            // Показываем предупреждение
+                            setTimeout(() => {
+                                loaderTextEl.style.opacity = '1';
+                                
+                                // Через секунду скрываем предупреждение и запускаем терминал
+                                setTimeout(() => {
+                                    loaderTextEl.style.opacity = '0';
+                                    loaderTextEl.style.transition = 'opacity 0.3s';
+                                    
+                                    // Запускаем анимацию терминала после скрытия
+                                    setTimeout(() => {
+                                        startTerminalLoadingAnimation();
+                                    }, 300);
+                                }, 1000);
+                            }, 300);
+                        } else {
+                            // Если нет элемента, просто запускаем терминал
+                            setTimeout(() => {
+                                startTerminalLoadingAnimation();
+                            }, 1300);
+                        }
+                        return;
+                    }
+                    
+                    const line = fishLines[lineIndex];
+                    if (charIndex < line.length) {
+                        let lineDiv = container.querySelector(`.fish-line-${lineIndex}`);
+                        if (!lineDiv) {
+                            lineDiv = document.createElement('div');
+                            lineDiv.className = `fish-line-${lineIndex}`;
+                            lineDiv.style.margin = '0';
+                            lineDiv.style.padding = '0';
+                            lineDiv.style.fontFamily = "'Courier New', monospace";
+                            lineDiv.style.fontSize = "14px";
+                            lineDiv.style.lineHeight = "1.1";
+                            lineDiv.style.color = "var(--accent)";
+                            lineDiv.style.textShadow = "0 0 10px var(--accent)";
+                            container.appendChild(lineDiv);
+                        }
+                        lineDiv.textContent = line.substring(0, charIndex + 1);
+                        charIndex++;
+                        setTimeout(drawFish, speed);
+                    } else {
+                        lineIndex++;
+                        charIndex = 0;
+                        setTimeout(drawFish, speed);
+                    }
+                }
+                
+                drawFish();
+            }, 1000);
+        }
+        
+        function startTerminalLoadingAnimation() {
+            // Показываем монитор для расчета позиции
+            const monitor = document.querySelector('.monitor');
+            if (!monitor) {
+                console.error('Monitor not found');
+                return;
+            }
+            
+            monitor.style.opacity = '0.01'; // Почти невидим, но видим для расчета
+            monitor.style.border = '3px solid transparent'; // Начинаем с прозрачной границы
+            
+            // Используем requestAnimationFrame для более плавного старта
+            requestAnimationFrame(() => {
+                const monitorRect = monitor.getBoundingClientRect();
+                
+                if (monitorRect.width === 0 || monitorRect.height === 0) {
+                    // Если размеры еще не определены, ждем еще
+                    setTimeout(startTerminalLoadingAnimation, 50);
+                    return;
+                }
+                
+                const borderWidth = 3;
+                const totalPerimeter = 2 * (monitorRect.width + monitorRect.height);
+                let drawnLength = 0; // Длина уже нарисованной границы
+                
+                function animateLoading() {
+                    const width = monitorRect.width;
+                    const height = monitorRect.height;
+                    const perimeter = 2 * (width + height);
+                    
+                    // Вычисляем текущую позицию на периметре
+                    const currentProgress = drawnLength / perimeter;
+                    
+                    if (currentProgress >= 1) {
+                        // Завершили круг, скрываем прелоадер и показываем терминал сразу
+                        monitor.style.border = `${borderWidth}px solid var(--border)`;
+                        const preloader = document.getElementById('preloader');
+                        if (preloader) {
+                            preloader.classList.add('hidden');
+                            // Уменьшаем задержку для более плавного перехода
+                            setTimeout(() => {
+                                preloader.style.display = 'none';
+                                animateTerminalAppearance();
+                            }, 200);
+                        }
+                        return;
+                    }
+                    
+                    // Определяем на какой стороне мы находимся
+                    const topLength = width;
+                    const rightLength = height;
+                    const bottomLength = width;
+                    const leftLength = height;
+                    
+                    let borderTop = 'transparent';
+                    let borderRight = 'transparent';
+                    let borderBottom = 'transparent';
+                    let borderLeft = 'transparent';
+                    
+                    if (drawnLength < topLength) {
+                        // Верхняя сторона
+                        borderTop = 'var(--border)';
+                    } else if (drawnLength < topLength + rightLength) {
+                        // Верхняя и правая стороны
+                        borderTop = 'var(--border)';
+                        borderRight = 'var(--border)';
+                    } else if (drawnLength < topLength + rightLength + bottomLength) {
+                        // Верхняя, правая и нижняя стороны
+                        borderTop = 'var(--border)';
+                        borderRight = 'var(--border)';
+                        borderBottom = 'var(--border)';
+                    } else {
+                        // Все стороны
+                        borderTop = 'var(--border)';
+                        borderRight = 'var(--border)';
+                        borderBottom = 'var(--border)';
+                        borderLeft = 'var(--border)';
+                    }
+                    
+                    monitor.style.borderTop = `${borderWidth}px solid ${borderTop}`;
+                    monitor.style.borderRight = `${borderWidth}px solid ${borderRight}`;
+                    monitor.style.borderBottom = `${borderWidth}px solid ${borderBottom}`;
+                    monitor.style.borderLeft = `${borderWidth}px solid ${borderLeft}`;
+                    
+                    // Увеличиваем нарисованную длину
+                    drawnLength += perimeter * 0.015; // ~1.5% периметра за кадр
+                    
+                    requestAnimationFrame(animateLoading);
+                }
+                
+                // Запускаем анимацию сразу
+                animateLoading();
+            });
+        }
+
+        function animateTerminalAppearance() {
+            const monitor = document.querySelector('.monitor');
+            
+            if (!monitor) return;
+            
+            // Показываем монитор сразу и запускаем анимацию рисования контура
+            monitor.style.opacity = '1';
+            monitor.classList.add('terminal-appearing');
+            
+            // Уменьшаем задержки для более быстрого появления
+            setTimeout(() => {
+                monitor.classList.add('animation-complete');
+                setTimeout(() => {
+                    monitor.classList.remove('terminal-appearing');
+                }, 200);
+            }, 400);
+        }
+
+        // Generate ASCII borders - новый подход
+        function generateAsciiBorders() {
+            const monitor = document.querySelector('.monitor');
+            if (!monitor) return;
+            
+            setTimeout(() => {
+                // Получаем реальную ширину monitor (без border)
+                const monitorRect = monitor.getBoundingClientRect();
+                const monitorWidth = monitorRect.width;
+                
+                // Получаем элементы рамок
+                const headerTop = document.getElementById('header-border-top');
+                const headerDivider = document.getElementById('header-border-divider');
+                const footerDivider = document.getElementById('footer-border-divider');
+                const footerBottom = document.getElementById('footer-border-bottom');
+                
+                if (!headerTop) return;
+                
+                // Получаем стили для расчета
+                const computedStyle = window.getComputedStyle(headerTop);
+                const fontSize = parseFloat(computedStyle.fontSize) || 12;
+                const letterSpacing = parseFloat(computedStyle.letterSpacing) || -1;
+                const fontFamily = computedStyle.fontFamily;
+                
+                // Создаем временный элемент для измерения
+                const measurer = document.createElement('pre');
+                measurer.style.position = 'absolute';
+                measurer.style.visibility = 'hidden';
+                measurer.style.whiteSpace = 'nowrap';
+                measurer.style.fontSize = fontSize + 'px';
+                measurer.style.letterSpacing = letterSpacing + 'px';
+                measurer.style.fontFamily = fontFamily;
+                measurer.style.lineHeight = '1';
+                measurer.style.padding = '0';
+                measurer.style.margin = '0';
+                document.body.appendChild(measurer);
+                
+                // Функция для поиска правильного количества символов
+                function findOptimalLength(cornerLeft, cornerRight) {
+                    // Измеряем ширину угловых символов
+                    measurer.textContent = cornerLeft + cornerRight;
+                    const cornersWidth = measurer.getBoundingClientRect().width;
+                    
+                    // Измеряем ширину одного символа ═
+                    measurer.textContent = '═';
+                    const charWidth = measurer.getBoundingClientRect().width;
+                    
+                    // Вычисляем доступную ширину
+                    const availableWidth = monitorWidth - cornersWidth;
+                    
+                    // Вычисляем количество символов
+                    let chars = Math.floor(availableWidth / charWidth);
+                    
+                    // Проверяем и корректируем
+                    measurer.textContent = cornerLeft + '═'.repeat(chars) + cornerRight;
+                    let actualWidth = measurer.getBoundingClientRect().width;
+                    
+                    // Если не хватает, добавляем символы
+                    while (actualWidth < monitorWidth - 1 && chars < 1000) {
+                        chars++;
+                        measurer.textContent = cornerLeft + '═'.repeat(chars) + cornerRight;
+                        actualWidth = measurer.getBoundingClientRect().width;
+                    }
+                    
+                    // Если слишком много, убираем символы
+                    while (actualWidth > monitorWidth + 1 && chars > 0) {
+                        chars--;
+                        measurer.textContent = cornerLeft + '═'.repeat(chars) + cornerRight;
+                        actualWidth = measurer.getBoundingClientRect().width;
+                    }
+                    
+                    return chars;
+                }
+                
+                // Генерируем рамки
+                const topChars = findOptimalLength('╔', '╗');
+                const dividerChars = findOptimalLength('╠', '╣');
+                const bottomChars = findOptimalLength('╚', '╝');
+                
+                if (headerTop) headerTop.textContent = '╔' + '═'.repeat(topChars) + '╗';
+                if (headerDivider) headerDivider.textContent = '╠' + '═'.repeat(dividerChars) + '╣';
+                if (footerDivider) footerDivider.textContent = '╠' + '═'.repeat(dividerChars) + '╣';
+                if (footerBottom) footerBottom.textContent = '╚' + '═'.repeat(bottomChars) + '╝';
+                
+                // Удаляем измеритель
+                document.body.removeChild(measurer);
+            }, 150);
+        }
+        
+        // Update borders on resize
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                generateAsciiBorders();
+                updateAsciiScrollbar();
+            }, 250);
+        });
+        
+        // Update scrollbar on scroll and clamp scroll position
+        const monitorContent = document.querySelector('.monitor-content');
+        if (monitorContent) {
+            monitorContent.addEventListener('scroll', () => {
+                // Ограничиваем скролл до реальной высоты контента (только если не игра)
+                if ((typeof gameRunning === 'undefined' || !gameRunning) && 
+                    (typeof gameWaitingForStart === 'undefined' || !gameWaitingForStart)) {
+                    clampScrollPosition();
+                }
+                // Обновляем скроллбар
+                updateAsciiScrollbar();
+            });
+            // Также обновляем при изменении размера контента
+            const resizeObserver = new ResizeObserver(() => {
+                // Не ограничиваем скролл во время игры
+                if ((typeof gameRunning === 'undefined' || !gameRunning) && 
+                    (typeof gameWaitingForStart === 'undefined' || !gameWaitingForStart)) {
+                    clampScrollPosition();
+                }
+                updateAsciiScrollbar();
+            });
+            resizeObserver.observe(monitorContent);
+            // Наблюдаем за изменениями в terminal-output
+            const terminalOutput = document.getElementById('terminal-output');
+            if (terminalOutput) {
+                resizeObserver.observe(terminalOutput);
+            }
+        }
+
+        // Initialize on load
+        const restoreButton = document.getElementById('restore-button');
+        if (restoreButton) {
+            restoreButton.style.display = 'none';
+        }
+        
+        // Generate ASCII borders after monitor is visible
+        setTimeout(() => {
+            generateAsciiBorders();
+            updateAsciiScrollbar();
+        }, 4000);
+
+        // Start preloader first
+        initPreloader();
+
+        // Start terminal after preloader (3.5 seconds)
+        setTimeout(initTerminal, 3500);
+
+        // Random theme on load
+        const availableThemes = [
+            { id: 'classic', name: 'CLASSIC' },
+            { id: 'retro', name: 'RETRO' },
+            { id: 'cyberpunk', name: 'CYBERPUNK' },
+            { id: 'ubuntu', name: 'UBUNTU' },
+            { id: 'gameboy', name: 'GAMEBOY' },
+            { id: 'excel', name: 'EXCEL' },
+            { id: 'norton', name: 'NORTON' },
+            { id: 'monochrome', name: 'MONOCHROME' },
+            { id: 'tron', name: 'TRON' }
+        ];
+
+        const randomTheme = availableThemes[Math.floor(Math.random() * availableThemes.length)];
+        setTheme(randomTheme.id);
+        
+        // Сохраняем текущую тему для отображения в подвале
+        let currentThemeName = randomTheme.name;
+        
+        // Обновляем отображение темы в подвале
+        function updateFooterTheme() {
+            const themeElement = document.getElementById('status-theme');
+            if (themeElement) {
+                themeElement.textContent = `theme: ${currentThemeName}`;
+            }
+        }
+        
+        // Обновляем функцию setTheme для обновления подвала
+        const originalSetTheme = setTheme;
+        setTheme = function(theme) {
+            originalSetTheme(theme);
+            const themeObj = availableThemes.find(t => t.id === theme);
+            if (themeObj) {
+                currentThemeName = themeObj.name;
+                updateFooterTheme();
+            }
+        };
+        
+        updateFooterTheme();
+        
+        // Сохраняем время загрузки
+        const loadTime = new Date();
+        const loadTimeStr = loadTime.toLocaleString('en-US', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        }) + '.' + String(loadTime.getMilliseconds()).padStart(3, '0');
+        
+        // Обновляем время загрузки в подвале
+        const loadTimeElement = document.getElementById('load-time');
+        if (loadTimeElement) {
+            loadTimeElement.textContent = loadTimeStr;
+        }
+        
+        // Счетчик миллисекунд на сайте (10 знаков)
+        let sessionMs = 0;
+        const sessionTimeElement = document.getElementById('session-time');
+        if (sessionTimeElement) {
+            setInterval(() => {
+                sessionMs += 10; // Обновляем каждые 10мс
+                const sessionStr = String(sessionMs).padStart(10, '0');
+                sessionTimeElement.textContent = sessionStr + ' ms';
+            }, 10);
+        }
+        
+        // ┌──────────────────────────────────────────────────────────────┐
+        // │  GLITCH EFFECT WITH SKULL                                    │
+        // └──────────────────────────────────────────────────────────────┘
+        
+        const skullArt = ` _
+(_)                  ,--------------.                  
+o                  ,' /  / .' .' .'  \`.                
+ .             _.-')_/_.'.').'_.').-')_\\          .-'- 
+           ,-',-._)_)_)_)_)_)_)_)_)_)_)_\\      ,-'  /  
+        .-'  ( O )_)_)_)_)_)_)_)_)_)_)_)_\`----' ,--/   
+ o     (. '' _\`-'_)_)_)_)_)_)_)_)_)_)_)_)_)_/ -'  ;    
+   O    \\\\_)_)_)_)_)__   )_)_)_)_)_)_)_)_)-',---  /    
+         ))_)_)_)_)((\\\\\\ _)_)_)_)_)_)_)_)_-/     /     
+   _    //_)_)_)_)_ \\\\(  )_)_)_)_)_)_)_)_)_---- ;      
+  (_)\\\ (' _)_)_)_)_)  \\\\(  _)_)_)_)_)_)_)_)+--.   |      
+   \\  \\ -._)_)_)_)_)_)_ _)_)_)_)_)_)_)/\\\_)-. \\  :      
+    \\  \\  \`.)_)_)_)_)_)_)_)_)_)_)_)_,'  \`.  \\ \\  :     
+\`-.  \\  \\   \`----._)_)_)_)_)_)_)_),'      \\  \`.  |     
+ ,;\\  \`. \\         ''------------'         \`-\\ \\ :     
+' .;\`-/ \\ \\                                   \\   \\    
+ ,; '(   \\ \\-------._                          \`.  \\   
+' .; ''-' '-'; ' .; '''--._                      \\  \\  
+ ,; ' ,; ' ,;\\.-./ ' ,; ' ,''-._    /\\            \`-.\`.
+' .; ' .; ' ' .; ' ' .; ' ' .; ' .; ' ''-' .\`.             \`-
+ ,; ' ,; ' ,;>(_)< ' ,; ' ,; ' ,; ' ,; '`;
+        
+        // Random glitch characters for replacement
+        const glitchChars = '!@#$%^&*()_+-=[]{}|;:,.<>?/~`';
+        const glitchSymbols = '█▓▒░▄▀■□▪▫';
+        
+        // ═══════════════════════════════════════════════════════════════
+        // GLITCH TYPE 1: HEAVY (Storm/Thunder) - ~every 20 seconds
+        // ═══════════════════════════════════════════════════════════════
+        function triggerHeavyGlitch() {
+            console.log('⚡ HEAVY GLITCH (Thunder Storm)');
+            const overlay = document.getElementById('glitch-overlay');
+            const skull = document.getElementById('glitch-skull');
+            
+            if (overlay && skull) {
+                // 40% chance to show fish instead of skull
+                const showFish = Math.random() < 0.4;
+                
+                if (showFish) {
+                    // Pick random fish frame
+                    const fishFrame = fishFrames[Math.floor(Math.random() * fishFrames.length)];
+                    skull.textContent = fishFrame;
+                    console.log('🐟 FISH GLITCH!');
+                } else {
+                    skull.textContent = skullArt;
+                }
+                
+                overlay.classList.add('active');
+                
+                // Longer duration for heavy glitch
+                const duration = 250 + Math.random() * 250;
+                setTimeout(() => {
+                    overlay.classList.remove('active');
+                }, duration);
+            }
+            
+            // Multiple text glitches
+            triggerSoftTextGlitch(8, 15); // 8-15 glitched lines
+            triggerMicroGlitches(10, 20); // 10-20 character glitches
+            
+            // 30% chance for double strike (thunder)
+            if (Math.random() < 0.3) {
+                setTimeout(() => {
+                    console.log('⚡⚡ DOUBLE STRIKE!');
+                    triggerMediumGlitch();
+                }, 300 + Math.random() * 200);
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // GLITCH TYPE 2: MEDIUM - ~every 20 seconds
+        // ═══════════════════════════════════════════════════════════════
+        function triggerMediumGlitch() {
+            console.log('⚡ MEDIUM GLITCH');
+            
+            // Medium text glitches
+            triggerSoftTextGlitch(4, 8); // 4-8 glitched lines
+            triggerMicroGlitches(5, 10); // 5-10 character glitches
+            
+            const overlay = document.getElementById('glitch-overlay');
+            const skull = document.getElementById('glitch-skull');
+            
+            // 15% chance to show fish briefly
+            const showFish = Math.random() < 0.15;
+            
+            if (overlay) {
+                if (showFish && skull) {
+                    // Show fish for brief moment
+                    const fishFrame = fishFrames[Math.floor(Math.random() * fishFrames.length)];
+                    skull.textContent = fishFrame;
+                    overlay.style.background = 'var(--bg)';
+                    overlay.classList.add('active');
+                    console.log('🐟 FISH FLASH!');
+                    
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                        skull.textContent = '';
+                    }, 150);
+                } else {
+                    // Brief screen flash (no image)
+                    overlay.style.background = 'transparent';
+                    overlay.classList.add('active');
+                    
+                    setTimeout(() => {
+                        overlay.classList.remove('active');
+                        overlay.style.background = 'var(--bg)';
+                    }, 100);
+                }
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // GLITCH TYPE 3: LIGHT (Micro) - 2-3 times per 20 seconds
+        // ═══════════════════════════════════════════════════════════════
+        function triggerLightGlitch() {
+            console.log('⚡ LIGHT GLITCH (Micro)');
+            
+            // Light glitches - just character replacements
+            triggerMicroGlitches(2, 5); // 2-5 character glitches
+            
+            // Maybe one text glitch
+            if (Math.random() < 0.4) {
+                triggerSoftTextGlitch(1, 2); // 1-2 glitched lines
+            }
+        }
+        
+        function triggerSoftTextGlitch(minCount = 2, maxCount = 5) {
+            const terminalOutput = document.getElementById('terminal-output');
+            if (!terminalOutput) return;
+            
+            // Get all text nodes
+            const textElements = terminalOutput.querySelectorAll('div');
+            if (textElements.length === 0) return;
+            
+            // Randomly glitch elements based on parameters
+            const glitchCount = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
+            
+            // 10% chance to inject fish line instead of glitch
+            const injectFish = Math.random() < 0.1;
+            
+            for (let i = 0; i < glitchCount; i++) {
+                const randomElement = textElements[Math.floor(Math.random() * textElements.length)];
+                if (randomElement && randomElement.textContent.trim().length > 5) {
+                    if (injectFish && i === 0) {
+                        // Replace one line with a random fish line
+                        applyFishGlitch(randomElement);
+                    } else {
+                        applyTextGlitch(randomElement);
+                    }
+                }
+            }
+        }
+        
+        function applyFishGlitch(element) {
+            // Store original text
+            const originalText = element.textContent;
+            element.setAttribute('data-text', originalText);
+            
+            // Get random fish and random line from it
+            const fishFrame = fishFrames[Math.floor(Math.random() * fishFrames.length)];
+            const fishLines = fishFrame.split('\n').filter(line => line.trim().length > 0);
+            const randomLine = fishLines[Math.floor(Math.random() * fishLines.length)];
+            
+            // Replace text with fish line
+            element.textContent = randomLine;
+            element.style.color = 'var(--accent)';
+            element.classList.add('text-glitch');
+            
+            console.log('🐟 FISH LINE INJECTED!');
+            
+            // Restore after a longer duration
+            const duration = 300 + Math.random() * 300;
+            setTimeout(() => {
+                element.textContent = originalText;
+                element.style.color = '';
+                element.classList.remove('text-glitch');
+                element.removeAttribute('data-text');
+            }, duration);
+        }
+        
+        function applyTextGlitch(element) {
+            // Store original text
+            const originalText = element.textContent;
+            element.setAttribute('data-text', originalText);
+            
+            // Add glitch class
+            element.classList.add('text-glitch');
+            
+            // Remove glitch after 200-400ms
+            const duration = 200 + Math.random() * 200;
+            setTimeout(() => {
+                element.classList.remove('text-glitch');
+                element.removeAttribute('data-text');
+            }, duration);
+        }
+        
+        function triggerMicroGlitches(minCount = 3, maxCount = 8) {
+            const terminalOutput = document.getElementById('terminal-output');
+            if (!terminalOutput) return;
+            
+            // Get all text nodes
+            const textElements = terminalOutput.querySelectorAll('div');
+            if (textElements.length === 0) return;
+            
+            // Randomly glitch individual characters based on parameters
+            const microGlitchCount = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
+            for (let i = 0; i < microGlitchCount; i++) {
+                const randomElement = textElements[Math.floor(Math.random() * textElements.length)];
+                if (randomElement && randomElement.textContent.trim().length > 3) {
+                    glitchRandomCharacter(randomElement);
+                }
+            }
+        }
+        
+        function glitchRandomCharacter(element) {
+            const text = element.textContent;
+            if (text.length < 3) return;
+            
+            // Pick a random position (not first/last char, not spaces)
+            let attempts = 0;
+            let pos = -1;
+            while (attempts < 10) {
+                pos = 1 + Math.floor(Math.random() * (text.length - 2));
+                if (text[pos] !== ' ' && text[pos] !== '\n' && text[pos] !== '\u00A0') {
+                    break;
+                }
+                attempts++;
+            }
+            
+            if (pos === -1 || attempts >= 10) return;
+            
+            // Store original character
+            const originalChar = text[pos];
+            
+            // Replace with random glitch character
+            const useSymbol = Math.random() > 0.5;
+            const glitchChar = useSymbol 
+                ? glitchSymbols[Math.floor(Math.random() * glitchSymbols.length)]
+                : glitchChars[Math.floor(Math.random() * glitchChars.length)];
+            
+            const newText = text.substring(0, pos) + glitchChar + text.substring(pos + 1);
+            element.textContent = newText;
+            
+            // Restore original character after 100-1000ms
+            const restoreDuration = 100 + Math.random() * 900;
+            setTimeout(() => {
+                const currentText = element.textContent;
+                if (currentText[pos] === glitchChar) {
+                    element.textContent = currentText.substring(0, pos) + originalChar + currentText.substring(pos + 1);
+                }
+            }, restoreDuration);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // GLITCH SCHEDULERS
+        // ═══════════════════════════════════════════════════════════════
+        
+        // Heavy glitch scheduler - ~once per minute (not too often!)
+        function scheduleHeavyGlitch() {
+            const nextGlitch = 55000 + Math.random() * 10000; // 55-65 sec
+            setTimeout(() => {
+                triggerHeavyGlitch();
+                scheduleHeavyGlitch(); // Schedule next heavy glitch
+            }, nextGlitch);
+        }
+        
+        // Medium glitch scheduler - ~every 20 seconds
+        function scheduleMediumGlitch() {
+            const nextGlitch = 18000 + Math.random() * 4000; // 18-22 sec
+            setTimeout(() => {
+                triggerMediumGlitch();
+                scheduleMediumGlitch(); // Schedule next medium glitch
+            }, nextGlitch);
+        }
+        
+        // Light glitch scheduler - 2-3 times per 20 seconds (every 6-10 sec)
+        function scheduleLightGlitch() {
+            const nextGlitch = 6000 + Math.random() * 4000; // 6-10 sec
+            setTimeout(() => {
+                triggerLightGlitch();
+                scheduleLightGlitch(); // Schedule next light glitch
+            }, nextGlitch);
+        }
+        
+        // Start all glitch schedulers with different initial delays
+        setTimeout(scheduleHeavyGlitch, 20000);  // Start heavy after 20 sec
+        setTimeout(scheduleMediumGlitch, 12000); // Start medium after 12 sec
+        setTimeout(scheduleLightGlitch, 4000);   // Start light after 4 sec
+        
+        // ═══════════════════════════════════════════════════════════════
+        // FLUID GLASS CURSOR MODE
+        // ═══════════════════════════════════════════════════════════════
+        // Inspired by @react-bits/FluidGlass-JS-CSS
+        
+        function toggleFluidGlassMode() {
+            fluidGlassModeActive = !fluidGlassModeActive;
+            const body = document.body;
+            const fluidGlassCursor = document.getElementById('fluid-glass-cursor');
+            
+            if (fluidGlassModeActive) {
+                body.classList.add('fluid-glass-mode');
+                typeTextWithLoader([
+                    'FluidGlass mode: ENABLED',
+                    'Fluid glass effect activated (200px)',
+                    'Move your mouse to see the fluid glass circle.',
+                    'Type "glass" again to disable.',
+                    ''
+                ], null, 20);
+                
+                // Initialize fluid glass cursor position
+                updateFluidGlassCursorPosition({ clientX: window.innerWidth / 2, clientY: window.innerHeight / 2 });
+            } else {
+                body.classList.remove('fluid-glass-mode');
+                typeTextWithLoader([
+                    'FluidGlass mode: DISABLED',
+                    'Standard cursor restored.',
+                    ''
+                ], null, 20);
+            }
+        }
+        
+        function updateFluidGlassCursorPosition(e) {
+            if (!fluidGlassModeActive) return;
+            
+            const fluidGlassCursor = document.getElementById('fluid-glass-cursor');
+            if (!fluidGlassCursor) return;
+            
+            const x = e.clientX || e.touches?.[0]?.clientX || 0;
+            const y = e.clientY || e.touches?.[0]?.clientY || 0;
+            
+            // Smooth animation with requestAnimationFrame
+            requestAnimationFrame(() => {
+                fluidGlassCursor.style.left = x + 'px';
+                fluidGlassCursor.style.top = y + 'px';
+            });
+        }
+        
+        function handleFluidGlassCursorHover(e) {
+            if (!fluidGlassModeActive) return;
+            
+            const fluidGlassCursor = document.getElementById('fluid-glass-cursor');
+            if (!fluidGlassCursor) return;
+            
+            const target = e.target;
+            const isInteractive = target.tagName === 'A' || 
+                                 target.tagName === 'BUTTON' || 
+                                 target.onclick || 
+                                 target.style.cursor === 'pointer' ||
+                                 window.getComputedStyle(target).cursor === 'pointer';
+            
+            if (isInteractive && target.id !== 'fluid-glass-cursor') {
+                fluidGlassCursor.classList.add('hover');
+            } else {
+                fluidGlassCursor.classList.remove('hover');
+            }
+        }
+        
+        // Event listeners for fluid glass cursor
+        document.addEventListener('mousemove', (e) => {
+            updateFluidGlassCursorPosition(e);
+            handleFluidGlassCursorHover(e);
+        });
+        
+        document.addEventListener('touchmove', (e) => {
+            if (fluidGlassModeActive) {
+                e.preventDefault();
+                updateFluidGlassCursorPosition(e);
+            }
+        }, { passive: false });
+        
+        // Hide fluid glass cursor when mouse leaves window
+        document.addEventListener('mouseleave', () => {
+            if (fluidGlassModeActive) {
+                const fluidGlassCursor = document.getElementById('fluid-glass-cursor');
+                if (fluidGlassCursor) {
+                    fluidGlassCursor.style.opacity = '0';
+                }
+            }
+        });
+        
+        document.addEventListener('mouseenter', () => {
+            if (fluidGlassModeActive) {
+                const fluidGlassCursor = document.getElementById('fluid-glass-cursor');
+                if (fluidGlassCursor) {
+                    fluidGlassCursor.style.opacity = '1';
+                }
+            }
+        });
+        
+        // ═══════════════════════════════════════════════════════════════
+        // ADAPTIVE CRT SCANLINE BEAM
+        // ═══════════════════════════════════════════════════════════════
+        
+        (function initAdaptiveScanBeam() {
+            const scanBeam = document.getElementById('crt-scanbeam');
+            if (!scanBeam) return;
+            
+            let lastUpdateTime = 0;
+            const updateInterval = 50; // Update every 50ms for performance
+            
+            // Helper to parse rgba/rgb color string
+            function parseColor(colorStr) {
+                if (!colorStr) return { r: 0, g: 0, b: 0, a: 1 };
+                
+                const match = colorStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+                if (match) {
+                    return {
+                        r: parseInt(match[1]),
+                        g: parseInt(match[2]),
+                        b: parseInt(match[3]),
+                        a: match[4] ? parseFloat(match[4]) : 1
+                    };
+                }
+                
+                // Handle hex colors
+                if (colorStr.startsWith('#')) {
+                    const hex = colorStr.substring(1);
+                    const r = parseInt(hex.substring(0, 2), 16);
+                    const g = parseInt(hex.substring(2, 4), 16);
+                    const b = parseInt(hex.substring(4, 6), 16);
+                    return { r, g, b, a: 1 };
+                }
+                
+                return { r: 0, g: 0, b: 0, a: 1 };
+            }
+            
+            // Calculate brightness from color
+            function getBrightness(color) {
+                return (0.299 * color.r + 0.587 * color.g + 0.114 * color.b) * color.a;
+            }
+            
+            function updateBeamAppearance() {
+                const now = Date.now();
+                if (now - lastUpdateTime < updateInterval) return;
+                lastUpdateTime = now;
+                
+                // Get beam position
+                const beamRect = scanBeam.getBoundingClientRect();
+                const beamY = beamRect.top + beamRect.height / 2;
+                
+                // Skip if beam is off screen
+                if (beamY < 0 || beamY > window.innerHeight) return;
+                
+                try {
+                    // Sample multiple points across the screen width
+                    const samplePoints = 10;
+                    const screenWidth = window.innerWidth;
+                    let totalBrightness = 0;
+                    let colorSum = { r: 0, g: 0, b: 0 };
+                    let validSamples = 0;
+                    
+                    for (let i = 0; i < samplePoints; i++) {
+                        const x = (screenWidth / (samplePoints + 1)) * (i + 1);
+                        
+                        // Get elements at this point
+                        const elements = document.elementsFromPoint(x, beamY);
+                        
+                        // Skip the beam itself and other overlays
+                        const contentElements = elements.filter(el => 
+                            el.id !== 'crt-scanbeam' && 
+                            !el.classList.contains('restore-button') &&
+                            el.id !== 'preloader'
+                        );
+                        
+                        if (contentElements.length > 0) {
+                            // Get the top-most content element
+                            const el = contentElements[0];
+                            const style = window.getComputedStyle(el);
+                            
+                            // Get color and background color
+                            const fgColor = parseColor(style.color);
+                            const bgColor = parseColor(style.backgroundColor);
+                            
+                            // Combine foreground and background (simplified alpha blending)
+                            const finalColor = {
+                                r: fgColor.r * fgColor.a + bgColor.r * bgColor.a * (1 - fgColor.a),
+                                g: fgColor.g * fgColor.a + bgColor.g * bgColor.a * (1 - fgColor.a),
+                                b: fgColor.b * fgColor.a + bgColor.b * bgColor.a * (1 - fgColor.a)
+                            };
+                            
+                            const brightness = getBrightness({ ...finalColor, a: 1 });
+                            totalBrightness += brightness;
+                            colorSum.r += finalColor.r;
+                            colorSum.g += finalColor.g;
+                            colorSum.b += finalColor.b;
+                            validSamples++;
+                        }
+                    }
+                    
+                    if (validSamples === 0) return;
+                    
+                    const avgBrightness = totalBrightness / validSamples;
+                    const avgColor = {
+                        r: Math.round(colorSum.r / validSamples),
+                        g: Math.round(colorSum.g / validSamples),
+                        b: Math.round(colorSum.b / validSamples)
+                    };
+                    
+                    // Adjust beam appearance based on brightness
+                    if (avgBrightness > 100) {
+                        // Bright area - stronger, more visible beam with color
+                        const intensity = Math.min(avgBrightness / 255, 1);
+                        scanBeam.style.height = '6px';
+                        scanBeam.style.background = `linear-gradient(to bottom, 
+                            transparent 0%, 
+                            rgba(${avgColor.r}, ${avgColor.g}, ${avgColor.b}, ${0.4 * intensity}) 50%,
+                            transparent 100%)`;
+                        scanBeam.style.boxShadow = `0 0 20px rgba(${avgColor.r}, ${avgColor.g}, ${avgColor.b}, ${0.7 * intensity})`;
+                        scanBeam.style.filter = `blur(${1 + intensity}px)`;
+                    } else if (avgBrightness > 30) {
+                        // Medium area - normal beam
+                        scanBeam.style.height = '4px';
+                        scanBeam.style.background = `linear-gradient(to bottom, 
+                            transparent 0%, 
+                            rgba(0, 255, 0, 0.25) 50%,
+                            transparent 100%)`;
+                        scanBeam.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.5)';
+                        scanBeam.style.filter = 'blur(0.5px)';
+                    } else {
+                        // Dark area - subtle beam
+                        scanBeam.style.height = '3px';
+                        scanBeam.style.background = `linear-gradient(to bottom, 
+                            transparent 0%, 
+                            rgba(0, 255, 0, 0.15) 50%,
+                            transparent 100%)`;
+                        scanBeam.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.3)';
+                        scanBeam.style.filter = 'blur(0px)';
+                    }
+                } catch (e) {
+                    // Silently fail if operations are blocked
+                    console.debug('Beam brightness detection error:', e.message);
+                }
+            }
+            
+            // Use requestAnimationFrame for smooth updates
+            function animationLoop() {
+                updateBeamAppearance();
+                requestAnimationFrame(animationLoop);
+            }
+            
+            // Start after a delay to let page load
+            setTimeout(() => {
+                animationLoop();
+            }, 2000);
+        })();
+    </script>
+</body>
+</html>
+
+
