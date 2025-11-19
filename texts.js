@@ -172,7 +172,9 @@ __________;"o,-------------......"""""\`'-._/(
             '• theme',
             '• help',
             '• clear',
-            '• exit'
+            '• exit',
+            '',
+            '🎮 v2.0 (son edition) → https://rybushk.in/papa.html'
         ]
     },
     
