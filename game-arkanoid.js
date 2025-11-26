@@ -420,6 +420,14 @@ function prepareGame() {
             if (gameWaitingForStart && !ballLaunched) {
                 gameWaitingForStart = false;
                 startGame();
+            } else if (!ballLaunched && gameRunning) {
+                // Launch ball during game
+                ball.x = paddle.x + paddle.width / 2;
+                ball.y = paddle.y - ball.radius;
+                ballLaunched = true;
+                ballLaunchFrame = 0;
+                ball.dx = 2 * gameSpeed;
+                ball.dy = -4 * gameSpeed;
             }
         });
         tapToStartButton.addEventListener('touchstart', (e) => {
@@ -427,6 +435,14 @@ function prepareGame() {
             if (gameWaitingForStart && !ballLaunched) {
                 gameWaitingForStart = false;
                 startGame();
+            } else if (!ballLaunched && gameRunning) {
+                // Launch ball during game
+                ball.x = paddle.x + paddle.width / 2;
+                ball.y = paddle.y - ball.radius;
+                ballLaunched = true;
+                ballLaunchFrame = 0;
+                ball.dx = 2 * gameSpeed;
+                ball.dy = -4 * gameSpeed;
             }
         });
         document.body.appendChild(tapToStartButton);
@@ -475,7 +491,7 @@ function prepareGame() {
     gameFooterElement.style.fontSize = '11px';
     gameFooterElement.style.fontFamily = "'Courier New', monospace";
     gameFooterElement.style.textShadow = '0 0 3px var(--accent)';
-    gameFooterElement.style.zIndex = '10002';
+    gameFooterElement.style.zIndex = '10006';
     gameFooterElement.style.pointerEvents = 'none';
     gameFooterElement.style.display = 'flex';
     gameFooterElement.style.flexDirection = 'column';
@@ -501,7 +517,7 @@ function prepareGame() {
         mobileControlLeft.style.fontFamily = 'monospace';
         mobileControlLeft.style.textShadow = '0 0 5px var(--accent)';
         mobileControlLeft.style.cursor = 'pointer';
-        mobileControlLeft.style.zIndex = '10005';
+        mobileControlLeft.style.zIndex = '10001';
         mobileControlLeft.style.userSelect = 'none';
         mobileControlLeft.style.touchAction = 'manipulation';
         mobileControlLeft.style.boxShadow = '0 0 10px var(--accent)';
@@ -524,7 +540,7 @@ function prepareGame() {
         mobileControlRight.style.fontFamily = 'monospace';
         mobileControlRight.style.textShadow = '0 0 5px var(--accent)';
         mobileControlRight.style.cursor = 'pointer';
-        mobileControlRight.style.zIndex = '10005';
+        mobileControlRight.style.zIndex = '10001';
         mobileControlRight.style.userSelect = 'none';
         mobileControlRight.style.touchAction = 'manipulation';
         mobileControlRight.style.boxShadow = '0 0 10px var(--accent)';
@@ -924,12 +940,13 @@ function updateGameDisplay() {
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
     
     if (isMobile && tapToStartButton) {
-        if (!ballLaunched && gameWaitingForStart) {
-            // Show button centered in the game area
+        if (!ballLaunched) {
+            // Show button centered in the game area (both initially and when ball needs to be launched)
             tapToStartButton.style.display = 'block';
             tapToStartButton.style.left = (rect.left + rect.width / 2) + 'px';
             tapToStartButton.style.top = (rect.top + rect.height / 2) + 'px';
             tapToStartButton.style.transform = 'translate(-50%, -50%)';
+            tapToStartButton.textContent = gameWaitingForStart ? 'Tap to start' : 'Tap to launch';
         } else {
             // Hide button when ball is launched
             tapToStartButton.style.display = 'none';
