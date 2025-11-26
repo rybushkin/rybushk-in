@@ -484,50 +484,50 @@ function prepareGame() {
     
     // Create mobile control buttons (only on mobile devices)
     if (isMobile) {
-        // Left button (inverted: right arrow)
+        // Left button
         mobileControlLeft = document.createElement('button');
         mobileControlLeft.id = 'mobile-control-left';
-        mobileControlLeft.textContent = '→'; // Inverted: shows right arrow for left control
+        mobileControlLeft.textContent = '◄';
         mobileControlLeft.style.position = 'fixed';
         mobileControlLeft.style.left = '20px';
         mobileControlLeft.style.bottom = '20px';
-        mobileControlLeft.style.width = '60px';
-        mobileControlLeft.style.height = '60px';
-        mobileControlLeft.style.borderRadius = '50%';
+        mobileControlLeft.style.width = '50px';
+        mobileControlLeft.style.height = '50px';
+        mobileControlLeft.style.borderRadius = '4px';
         mobileControlLeft.style.border = '2px solid var(--accent)';
-        mobileControlLeft.style.backgroundColor = 'var(--accent)'; // Inverted: accent background
-        mobileControlLeft.style.color = '#000000'; // Inverted: black text
+        mobileControlLeft.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        mobileControlLeft.style.color = 'var(--accent)';
         mobileControlLeft.style.fontSize = '24px';
         mobileControlLeft.style.fontFamily = 'monospace';
-        mobileControlLeft.style.textShadow = 'none'; // No shadow for inverted
+        mobileControlLeft.style.textShadow = '0 0 5px var(--accent)';
         mobileControlLeft.style.cursor = 'pointer';
         mobileControlLeft.style.zIndex = '10005';
         mobileControlLeft.style.userSelect = 'none';
         mobileControlLeft.style.touchAction = 'manipulation';
-        mobileControlLeft.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.8)';
+        mobileControlLeft.style.boxShadow = '0 0 10px var(--accent)';
         document.body.appendChild(mobileControlLeft);
         
-        // Right button (inverted: left arrow)
+        // Right button
         mobileControlRight = document.createElement('button');
         mobileControlRight.id = 'mobile-control-right';
-        mobileControlRight.textContent = '←'; // Inverted: shows left arrow for right control
+        mobileControlRight.textContent = '►';
         mobileControlRight.style.position = 'fixed';
         mobileControlRight.style.right = '20px';
         mobileControlRight.style.bottom = '20px';
-        mobileControlRight.style.width = '60px';
-        mobileControlRight.style.height = '60px';
-        mobileControlRight.style.borderRadius = '50%';
+        mobileControlRight.style.width = '50px';
+        mobileControlRight.style.height = '50px';
+        mobileControlRight.style.borderRadius = '4px';
         mobileControlRight.style.border = '2px solid var(--accent)';
-        mobileControlRight.style.backgroundColor = 'var(--accent)'; // Inverted: accent background
-        mobileControlRight.style.color = '#000000'; // Inverted: black text
+        mobileControlRight.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+        mobileControlRight.style.color = 'var(--accent)';
         mobileControlRight.style.fontSize = '24px';
         mobileControlRight.style.fontFamily = 'monospace';
-        mobileControlRight.style.textShadow = 'none'; // No shadow for inverted
+        mobileControlRight.style.textShadow = '0 0 5px var(--accent)';
         mobileControlRight.style.cursor = 'pointer';
         mobileControlRight.style.zIndex = '10005';
         mobileControlRight.style.userSelect = 'none';
         mobileControlRight.style.touchAction = 'manipulation';
-        mobileControlRight.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.8)';
+        mobileControlRight.style.boxShadow = '0 0 10px var(--accent)';
         document.body.appendChild(mobileControlRight);
         
         // Touch event handlers
@@ -699,11 +699,27 @@ function startGame() {
             tapToStartButton.style.display = 'none';
         }
         
+        // Check if mobile
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        
+        // On mobile: hide monitor header and footer for full game screen
+        if (isMobile) {
+            const monitorHeader = document.querySelector('.monitor-header');
+            const monitorFooter = document.querySelector('.monitor-footer');
+            if (monitorHeader) {
+                monitorHeader.style.display = 'none';
+                console.log('Mobile: Hidden monitor header');
+            }
+            if (monitorFooter) {
+                monitorFooter.style.display = 'none';
+                console.log('Mobile: Hidden monitor footer');
+            }
+        }
+        
         // Scroll to show fish near top (especially important on mobile)
         const fishArt = document.getElementById('fish-art');
         if (fishArt) {
             setTimeout(() => {
-                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
                 if (isMobile) {
                     // On mobile: scroll fish to the very top
                     monitorContent.scrollTop = 0;
@@ -1187,6 +1203,21 @@ function endGame() {
     });
     fishBlocks = [];
     
+    // Restore monitor header and footer on mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    if (isMobile) {
+        const monitorHeader = document.querySelector('.monitor-header');
+        const monitorFooter = document.querySelector('.monitor-footer');
+        if (monitorHeader) {
+            monitorHeader.style.display = '';
+            console.log('Mobile: Restored monitor header');
+        }
+        if (monitorFooter) {
+            monitorFooter.style.display = '';
+            console.log('Mobile: Restored monitor footer');
+        }
+    }
+    
     // Show terminal input line
     const inputLine = document.getElementById('terminal-input-line');
     if (inputLine) {
@@ -1291,6 +1322,21 @@ function winGame() {
         }
     });
     fishBlocks = [];
+    
+    // Restore monitor header and footer on mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    if (isMobile) {
+        const monitorHeader = document.querySelector('.monitor-header');
+        const monitorFooter = document.querySelector('.monitor-footer');
+        if (monitorHeader) {
+            monitorHeader.style.display = '';
+            console.log('Mobile: Restored monitor header');
+        }
+        if (monitorFooter) {
+            monitorFooter.style.display = '';
+            console.log('Mobile: Restored monitor footer');
+        }
+    }
     
     // Show terminal input line
     const inputLine = document.getElementById('terminal-input-line');
@@ -1419,6 +1465,19 @@ function resetGame() {
             block.element.style.visibility = 'visible';
         }
     });
+    
+    // Restore monitor header and footer on mobile
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+    if (isMobile) {
+        const monitorHeader = document.querySelector('.monitor-header');
+        const monitorFooter = document.querySelector('.monitor-footer');
+        if (monitorHeader) {
+            monitorHeader.style.display = '';
+        }
+        if (monitorFooter) {
+            monitorFooter.style.display = '';
+        }
+    }
     
     // Show terminal input line
     document.getElementById('terminal-input-line').style.display = 'flex';
