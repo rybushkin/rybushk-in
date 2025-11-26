@@ -299,7 +299,10 @@
         let historyIndex = -1;
         let commandHistory = [];
         let terminalReady = false;
-        let waitingForGameResponse = false;
+        // Global variable for game response - must be on window object
+        if (typeof window.waitingForGameResponse === 'undefined') {
+            window.waitingForGameResponse = false;
+        }
         let fluidGlassModeActive = false;
 
         // Fish ASCII art - animated frames
@@ -980,6 +983,24 @@
                             lineIndex++;
                             setTimeout(processContactLine, 100);
                         }, 20);
+                    } else if (line.startsWith('Son.json: ')) {
+                        // Create link for Son.json
+                        const outputLine = appendOutput('');
+                        const url = line.substring('Son.json: '.length);
+                        typeText(line, outputLine, () => {
+                            outputLine.innerHTML = '';
+                            outputLine.textContent = 'Son.json: ';
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.textContent = url;
+                            link.style.color = 'var(--md-link)';
+                            link.style.textDecoration = 'underline';
+                            link.style.textShadow = '0 0 5px var(--md-link)';
+                            link.target = '_blank';
+                            outputLine.appendChild(link);
+                            lineIndex++;
+                            setTimeout(processContactLine, 100);
+                        }, 20);
                     } else {
                         const outputLine = appendOutput('');
                         typeText(line, outputLine, () => {
@@ -997,8 +1018,50 @@
                 
                 // Show intro text
                 typeTextWithLoader(SiteTexts.commands.game.intro, () => {
-                    // Wait for user input (y/n)
-                    waitForGameStart();
+                    // TEMPORARILY DISABLED: Request player name and y/n confirmation
+                    // Request player name immediately
+                    // waitingForPlayerName = true;
+                    // window.waitingForPlayerName = true;
+                    // appendOutput('');
+                    // appendOutput('Enter your name:');
+                    // appendOutput('');
+                    // // Force scroll to bottom
+                    // setTimeout(() => {
+                    //     const monitorContent = document.querySelector('.monitor-content');
+                    //     if (monitorContent) {
+                    //         monitorContent.scrollTop = monitorContent.scrollHeight;
+                    //     }
+                    //     const inputEl = document.getElementById('terminal-input');
+                    //     if (inputEl) {
+                    //         inputEl.focus();
+                    //     }
+                    // }, 100);
+                    
+                    // Set default player name and start game immediately
+                    if (typeof window.playerName === 'undefined' || !window.playerName) {
+                        window.playerName = 'Player';
+                    }
+                    
+                    // Call showGameInstructions - wait a bit to ensure script is loaded
+                    let retryCount = 0;
+                    const maxRetries = 20; // Try for up to 1 second (20 * 50ms)
+                    const tryCallShowGameInstructions = () => {
+                        if (typeof window.showGameInstructions === 'function') {
+                            console.log('Calling window.showGameInstructions()');
+                            window.showGameInstructions();
+                        } else if (retryCount < maxRetries) {
+                            retryCount++;
+                            console.warn(`showGameInstructions not yet available, retrying... (${retryCount}/${maxRetries})`);
+                            setTimeout(tryCallShowGameInstructions, 50);
+                        } else {
+                            console.error('showGameInstructions failed to load after multiple attempts');
+                            appendOutput('Error: Game initialization failed. showGameInstructions not found.');
+                            appendOutput('Please refresh the page.');
+                        }
+                    };
+                    
+                    // Try immediately, then retry if needed
+                    setTimeout(tryCallShowGameInstructions, 0);
                 }, 20);
             },
             doom: () => {
@@ -1056,7 +1119,7 @@
                         // Create clickable link for son's version
                         const outputLine = appendOutput('');
                         const link = document.createElement('a');
-                        link.href = 'https://rybushk.in/papa.html';
+                        link.href = 'https://rybushk.in/tim/papa.html';
                         link.textContent = line;
                         link.style.color = 'var(--md-link)';
                         link.style.textDecoration = 'underline';
@@ -1243,8 +1306,12 @@
                     updateCursorPosition(); // Reset cursor position
                     
                     // Check if waiting for game response or player name
-                    if (waitingForGameResponse || window.waitingForPlayerName) {
-                        handleGameResponse(cmd);
+                    if (window.waitingForGameResponse || window.waitingForPlayerName) {
+                        if (window.handleGameResponse) {
+                            window.handleGameResponse(cmd.toLowerCase());
+                        } else {
+                            handleGameResponse(cmd.toLowerCase());
+                        }
                         return;
                     }
                     

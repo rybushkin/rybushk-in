@@ -1,4 +1,5 @@
 // Arkanoid Game Module
+console.log('game-arkanoid.js: Script loading...');
 
 // Game state variables
 let gameRunning = false;
@@ -11,13 +12,14 @@ let lives = 3;
 let gameAnimationId;
 let paddleElement, ballElement, scoreElement, gameFooterElement, spaceHintElement, tapToStartButton;
 let gameSpeed = 1.0; // Speed multiplier for game (1.0 = normal speed)
-let playerName = '';
+let playerName = 'Player'; // Default player name (name input temporarily disabled)
+window.playerName = 'Player'; // Make it global for access from index.html
 let waitingForPlayerName = false;
 window.waitingForPlayerName = false; // Make it global for access from index.html
 let mobileControlLeft, mobileControlRight;
 
 function waitForGameStart() {
-    waitingForGameResponse = true;
+    window.waitingForGameResponse = true;
     // Ensure input prompt is visible and focused
     const inputLine = document.getElementById('terminal-input-line');
     const inputEl = document.getElementById('terminal-input');
@@ -32,163 +34,279 @@ function waitForGameStart() {
 }
 
 function handleGameResponse(response) {
+    // TEMPORARILY DISABLED: Name input and y/n confirmation
     // Save original response for output
-    const originalResponse = response;
-    const trimmedResponse = response.trim().toLowerCase();
+    // const originalResponse = response;
+    // const trimmedResponse = response.trim().toLowerCase();
     
-    if (waitingForPlayerName) {
-        // Handle player name input
-        playerName = originalResponse.trim() || 'Player';
-        waitingForPlayerName = false;
-        window.waitingForPlayerName = false;
-        appendOutput('$ ' + originalResponse, 'terminal-prompt');
-        appendOutput('');
-        appendOutput(`Welcome, ${playerName}!`);
-        appendOutput('');
-        // Force scroll to bottom
-        setTimeout(() => {
-            const monitorContent = document.querySelector('.monitor-content');
-            if (monitorContent) {
-                monitorContent.scrollTop = monitorContent.scrollHeight;
-            }
-        }, 100);
-        showGameInstructions();
-        return;
+    // if (window.waitingForPlayerName) {
+    //     // Handle player name input
+    //     playerName = originalResponse.trim() || 'Player';
+    //     waitingForPlayerName = false;
+    //     window.waitingForPlayerName = false;
+    //     appendOutput('$ ' + originalResponse, 'terminal-prompt');
+    //     appendOutput('');
+    //     appendOutput(`Welcome, ${playerName}!`);
+    //     appendOutput('');
+    //     // Force scroll to bottom
+    //     setTimeout(() => {
+    //         const monitorContent = document.querySelector('.monitor-content');
+    //         if (monitorContent) {
+    //             monitorContent.scrollTop = monitorContent.scrollHeight;
+    //         }
+    //     }, 100);
+    //     showGameInstructions();
+    //     return;
+    // }
+    
+    // if (trimmedResponse === 'y' || trimmedResponse === 'yes') {
+    //     window.waitingForGameResponse = false;
+    //     appendOutput('$ ' + originalResponse, 'terminal-prompt');
+    //     appendOutput('');
+    //     // Request player name
+    //     waitingForPlayerName = true;
+    //     window.waitingForPlayerName = true;
+    //     appendOutput('Enter your name:');
+    //     appendOutput('');
+    //     // Force scroll to bottom
+    //     setTimeout(() => {
+    //         const monitorContent = document.querySelector('.monitor-content');
+    //         if (monitorContent) {
+    //             monitorContent.scrollTop = monitorContent.scrollHeight;
+    //         }
+    //         const inputEl = document.getElementById('terminal-input');
+    //         if (inputEl) {
+    //             inputEl.focus();
+    //         }
+    //     }, 100);
+    // } else if (trimmedResponse === 'n' || trimmedResponse === 'no') {
+    //     window.waitingForGameResponse = false;
+    //     appendOutput('$ ' + originalResponse, 'terminal-prompt');
+    //     appendOutput('');
+    //     appendOutput('Game cancelled.');
+    //     appendOutput('');
+    //     // Force scroll to bottom
+    //     setTimeout(() => {
+    //         const monitorContent = document.querySelector('.monitor-content');
+    //         if (monitorContent) {
+    //             monitorContent.scrollTop = monitorContent.scrollHeight;
+    //         }
+    //     }, 100);
+    // } else {
+    //     // Invalid answer - keep window.waitingForGameResponse = true
+    //     appendOutput('$ ' + originalResponse, 'terminal-prompt');
+    //     appendOutput('');
+    //     appendOutput('Please answer y or n');
+    //     appendOutput('');
+    //     // Force scroll to bottom
+    //     setTimeout(() => {
+    //         const monitorContent = document.querySelector('.monitor-content');
+    //         if (monitorContent) {
+    //             monitorContent.scrollTop = monitorContent.scrollHeight;
+    //         }
+    //         // Ensure input prompt remains visible
+    //         const inputEl = document.getElementById('terminal-input');
+    //         if (inputEl) {
+    //             inputEl.focus();
+    //         }
+    //     }, 100);
+    // }
+    
+    // Empty function for now - game starts directly without name input or y/n confirmation
+}
+
+// Make handleGameResponse globally accessible
+window.handleGameResponse = handleGameResponse;
+
+// Function to check all required dependencies for the game
+function checkGameDependencies() {
+    const dependencies = [];
+    
+    // Check for required functions
+    if (typeof appendOutput === 'undefined') {
+        dependencies.push('appendOutput function');
+    }
+    if (typeof typeText === 'undefined') {
+        dependencies.push('typeText function');
     }
     
-    if (trimmedResponse === 'y' || trimmedResponse === 'yes') {
-        waitingForGameResponse = false;
-        appendOutput('$ ' + originalResponse, 'terminal-prompt');
-        appendOutput('');
-        // Request player name
-        waitingForPlayerName = true;
-        window.waitingForPlayerName = true;
-        appendOutput('Enter your name:');
-        appendOutput('');
-        // Force scroll to bottom
-        setTimeout(() => {
-            const monitorContent = document.querySelector('.monitor-content');
-            if (monitorContent) {
-                monitorContent.scrollTop = monitorContent.scrollHeight;
-            }
-            const inputEl = document.getElementById('terminal-input');
-            if (inputEl) {
-                inputEl.focus();
-            }
-        }, 100);
-    } else if (trimmedResponse === 'n' || trimmedResponse === 'no') {
-        waitingForGameResponse = false;
-        appendOutput('$ ' + originalResponse, 'terminal-prompt');
-        appendOutput('');
-        appendOutput('Game cancelled.');
-        appendOutput('');
-        // Force scroll to bottom
-        setTimeout(() => {
-            const monitorContent = document.querySelector('.monitor-content');
-            if (monitorContent) {
-                monitorContent.scrollTop = monitorContent.scrollHeight;
-            }
-        }, 100);
+    // Check for required data
+    if (typeof SiteTexts === 'undefined') {
+        dependencies.push('SiteTexts object');
     } else {
-        // Invalid answer - keep waitingForGameResponse = true
-        appendOutput('$ ' + originalResponse, 'terminal-prompt');
+        if (!SiteTexts.commands) {
+            dependencies.push('SiteTexts.commands');
+        } else if (!SiteTexts.commands.game) {
+            dependencies.push('SiteTexts.commands.game');
+        } else {
+            if (!SiteTexts.commands.game.fishArt) {
+                dependencies.push('SiteTexts.commands.game.fishArt');
+            }
+            if (!SiteTexts.commands.game.spacePrompt) {
+                dependencies.push('SiteTexts.commands.game.spacePrompt');
+            }
+        }
+    }
+    
+    // Check for required DOM elements
+    if (!document.getElementById('terminal-output')) {
+        dependencies.push('terminal-output element');
+    }
+    if (!document.querySelector('.monitor-content')) {
+        dependencies.push('monitor-content element');
+    }
+    
+    if (dependencies.length > 0) {
+        console.error('Missing game dependencies:', dependencies);
+        return { success: false, missing: dependencies };
+    }
+    
+    console.log('All game dependencies available');
+    return { success: true, missing: [] };
+}
+
+// Declare and export showGameInstructions immediately
+// Export as soon as possible to ensure it's available
+function showGameInstructions() {
+    try {
+        console.log('showGameInstructions called');
+        
+        // Check all dependencies
+        const depCheck = checkGameDependencies();
+        if (!depCheck.success) {
+            const errorMsg = 'Missing required dependencies: ' + depCheck.missing.join(', ');
+            console.error(errorMsg);
+            if (typeof appendOutput !== 'undefined') {
+                appendOutput('Error: Game cannot start. ' + errorMsg);
+            }
+            return;
+        }
+        
         appendOutput('');
-        appendOutput('Please answer y or n');
-        appendOutput('');
-        // Force scroll to bottom
-        setTimeout(() => {
+        
+        // Show fish art immediately at top
+        const outputEl = document.getElementById('terminal-output');
+        if (!outputEl) {
+            console.error('terminal-output element not found');
+            return;
+        }
+        
+        const artDiv = document.createElement('pre');
+        artDiv.id = 'fish-art';
+        artDiv.style.color = 'var(--accent)';
+        artDiv.style.margin = '0';
+        artDiv.style.padding = '0';
+        artDiv.style.lineHeight = '1.1';
+        artDiv.style.fontSize = '14px';
+        artDiv.style.fontWeight = 'normal';
+        artDiv.style.position = 'relative';
+        artDiv.style.zIndex = '50';
+        outputEl.appendChild(artDiv);
+        
+        const fishArt = SiteTexts.commands.game.fishArt;
+        if (!fishArt) {
+            console.error('SiteTexts.commands.game.fishArt is not defined');
+            return;
+        }
+        
+        typeText(fishArt, artDiv, () => {
+            // Add a few empty lines for spacing
+            for (let i = 0; i < 3; i++) {
+                appendOutput('');
+            }
+            
+            // Add space prompt in terminal flow, not fixed
+            const gamePrompt = document.createElement('div');
+            gamePrompt.id = 'game-space-prompt';
+            gamePrompt.style.color = 'var(--accent)';
+            gamePrompt.style.fontSize = '14px';
+            gamePrompt.style.fontFamily = "'Courier New', monospace";
+            gamePrompt.style.textAlign = 'center';
+            gamePrompt.style.textShadow = '0 0 5px var(--accent)';
+            gamePrompt.style.fontWeight = 'bold';
+            gamePrompt.style.margin = '20px 0';
+            gamePrompt.textContent = SiteTexts.commands.game.spacePrompt;
+            outputEl.appendChild(gamePrompt);
+            
+            // Scroll to show fish at top of view
             const monitorContent = document.querySelector('.monitor-content');
-            if (monitorContent) {
-                monitorContent.scrollTop = monitorContent.scrollHeight;
-            }
-            // Ensure input prompt remains visible
-            const inputEl = document.getElementById('terminal-input');
-            if (inputEl) {
-                inputEl.focus();
-            }
-        }, 100);
+            setTimeout(() => {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+                if (isMobile) {
+                    // On mobile: scroll to the very top to show fish
+                    monitorContent.scrollTop = 0;
+                    console.log('Mobile: Scrolled to top, Fish offset:', artDiv.offsetTop);
+                } else {
+                    // On desktop: scroll to fish art position with small margin
+                    const scrollTarget = artDiv.offsetTop - 20;
+                    monitorContent.scrollTop = scrollTarget;
+                    console.log('Scrolled to:', scrollTarget, 'Fish offset:', artDiv.offsetTop);
+                }
+            }, 200);
+            
+            // Wait for DOM update and scroll completion before initializing game
+            setTimeout(() => {
+                // Check if fish art is ready
+                const fishArtElement = document.getElementById('fish-art');
+                if (!fishArtElement) {
+                    console.error('Fish art element not found after typeText');
+                    appendOutput('Error: Game initialization failed. Fish art not ready.');
+                    return;
+                }
+                
+                // Set flag BEFORE preparing game
+                gameWaitingForStart = true;
+                
+                // Initialize game setup (but don't start yet)
+                prepareGame();
+                
+                // Create blocks with retry logic - try multiple times with increasing delays
+                let retryCount = 0;
+                const maxRetries = 5;
+                const tryCreateBlocks = () => {
+                    console.log(`Attempting to create blocks, attempt ${retryCount + 1}/${maxRetries}`);
+                    createTextBlocks();
+                    
+                    if (fishBlocks.length === 0 && retryCount < maxRetries) {
+                        retryCount++;
+                        const delay = 300 * retryCount; // Increasing delay: 300ms, 600ms, 900ms, etc.
+                        console.warn(`No blocks created, retrying in ${delay}ms...`);
+                        setTimeout(tryCreateBlocks, delay);
+                    } else if (fishBlocks.length === 0) {
+                        console.error('Failed to create fish blocks after all retries');
+                        appendOutput('Error: Game initialization failed. Please refresh and try again.');
+                    } else {
+                        console.log('Successfully created', fishBlocks.length, 'blocks');
+                        console.log('Waiting for spacebar, gameWaitingForStart:', gameWaitingForStart);
+                    }
+                };
+                
+                // Start trying to create blocks after initial delay
+                setTimeout(tryCreateBlocks, 500);
+                
+                // Wait for spacebar to start
+                waitForSpaceToStart();
+            }, 500);
+        }, 3);
+    } catch (error) {
+        console.error('Error in showGameInstructions:', error);
+        if (typeof appendOutput !== 'undefined') {
+            appendOutput('Error initializing game: ' + error.message);
+        }
     }
 }
 
-function showGameInstructions() {
-    appendOutput('');
-    
-    // Show fish art immediately at top
-    const outputEl = document.getElementById('terminal-output');
-    const artDiv = document.createElement('pre');
-    artDiv.id = 'fish-art';
-    artDiv.style.color = 'var(--accent)';
-    artDiv.style.margin = '0';
-    artDiv.style.padding = '0';
-    artDiv.style.lineHeight = '1.1';
-    artDiv.style.fontSize = '14px';
-    artDiv.style.fontWeight = 'normal';
-    artDiv.style.position = 'relative';
-    artDiv.style.zIndex = '50';
-    outputEl.appendChild(artDiv);
-    
-    typeText(SiteTexts.commands.game.fishArt, artDiv, () => {
-        // Add a few empty lines for spacing
-        for (let i = 0; i < 3; i++) {
-            appendOutput('');
-        }
-        
-        // Add space prompt in terminal flow, not fixed
-        const gamePrompt = document.createElement('div');
-        gamePrompt.id = 'game-space-prompt';
-        gamePrompt.style.color = 'var(--accent)';
-        gamePrompt.style.fontSize = '14px';
-        gamePrompt.style.fontFamily = "'Courier New', monospace";
-        gamePrompt.style.textAlign = 'center';
-        gamePrompt.style.textShadow = '0 0 5px var(--accent)';
-        gamePrompt.style.fontWeight = 'bold';
-        gamePrompt.style.margin = '20px 0';
-        gamePrompt.textContent = SiteTexts.commands.game.spacePrompt;
-        outputEl.appendChild(gamePrompt);
-        
-        // Scroll to show fish at top of view
-        const monitorContent = document.querySelector('.monitor-content');
-        setTimeout(() => {
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-            if (isMobile) {
-                // On mobile: scroll to the very top to show fish
-                monitorContent.scrollTop = 0;
-                console.log('Mobile: Scrolled to top, Fish offset:', artDiv.offsetTop);
-            } else {
-                // On desktop: scroll to fish art position with small margin
-                const scrollTarget = artDiv.offsetTop - 20;
-                monitorContent.scrollTop = scrollTarget;
-                console.log('Scrolled to:', scrollTarget, 'Fish offset:', artDiv.offsetTop);
-            }
-        }, 150);
-        
-        // Wait for DOM update before initializing game
-        setTimeout(() => {
-            // Set flag BEFORE preparing game
-            gameWaitingForStart = true;
-            
-            // Initialize game setup (but don't start yet)
-            prepareGame();
-            
-            // Create blocks AFTER scroll has completed
-            setTimeout(() => {
-                createTextBlocks();
-                
-                // Verify blocks were created
-                if (fishBlocks.length === 0) {
-                    console.error('No fish blocks created! Retrying...');
-                    // Retry block creation
-                    createTextBlocks();
-                }
-                
-                console.log('Fish blocks created:', fishBlocks.length);
-                console.log('Waiting for spacebar, gameWaitingForStart:', gameWaitingForStart);
-            }, 200);
-            
-            // Wait for spacebar to start
-            waitForSpaceToStart();
-        }, 300);
-    }, 3);
+// CRITICAL: Export showGameInstructions IMMEDIATELY after definition
+// This must be the very next line to ensure it's available
+try {
+    if (typeof window !== 'undefined') {
+        window.showGameInstructions = showGameInstructions;
+        console.log('game-arkanoid.js: showGameInstructions exported successfully');
+    } else {
+        console.error('game-arkanoid.js: window is not available');
+    }
+} catch (e) {
+    console.error('game-arkanoid.js: Error exporting showGameInstructions:', e);
 }
 
 function waitForSpaceToStart() {
@@ -210,21 +328,36 @@ function waitForSpaceToStart() {
 }
 
 function prepareGame() {
-    const monitorContent = document.querySelector('.monitor-content');
-    const contentRect = monitorContent.getBoundingClientRect();
-    const gameWidth = contentRect.width;
-    const gameHeight = contentRect.height;
-    
-    // Hide terminal input
-    document.getElementById('terminal-input-line').style.display = 'none';
-    
-    // Hide all terminal output except fish
-    const terminalOutput = document.getElementById('terminal-output');
-    Array.from(terminalOutput.children).forEach(child => {
-        if (child.id !== 'fish-art') {
-            child.style.display = 'none';
+    try {
+        console.log('prepareGame: Starting game preparation...');
+        
+        const monitorContent = document.querySelector('.monitor-content');
+        if (!monitorContent) {
+            console.error('prepareGame: monitor-content not found');
+            return;
         }
-    });
+        
+        const contentRect = monitorContent.getBoundingClientRect();
+        const gameWidth = contentRect.width;
+        const gameHeight = contentRect.height;
+        
+        console.log('prepareGame: Game dimensions:', { width: gameWidth, height: gameHeight });
+        
+        // Hide terminal input
+        const terminalInputLine = document.getElementById('terminal-input-line');
+        if (terminalInputLine) {
+            terminalInputLine.style.display = 'none';
+        }
+        
+        // Hide all terminal output except fish
+        const terminalOutput = document.getElementById('terminal-output');
+        if (terminalOutput) {
+            Array.from(terminalOutput.children).forEach(child => {
+                if (child.id !== 'fish-art') {
+                    child.style.display = 'none';
+                }
+            });
+        }
     
     // Create paddle element
     paddleElement = document.createElement('div');
@@ -323,9 +456,6 @@ function prepareGame() {
         spaceHintElement.style.whiteSpace = 'nowrap';
         document.body.appendChild(spaceHintElement);
     }
-    
-    // Detect mobile device
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
     
     // Create game footer with divider and info
     gameFooterElement = document.createElement('div');
@@ -473,8 +603,6 @@ function prepareGame() {
     
     // Initialize game objects (relative coordinates)
     // Paddle positioned low, just above the footer
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-    
     if (isMobile) {
         // On mobile: paddle above footer (60px footer + 20px margin = 80px from bottom)
         paddle = {
@@ -515,105 +643,192 @@ function prepareGame() {
         };
     }
     
-    ballLaunched = false;
-    ballLaunchFrame = 0;
-    score = 0;
-    lives = 3;
-    gameSpeed = 1.0; // Reset speed to normal
-    
-    // Note: createTextBlocks() is now called separately after scroll completes
-    
-    // Update display
-    updateGameDisplay();
+        ballLaunched = false;
+        ballLaunchFrame = 0;
+        score = 0;
+        lives = 3;
+        gameSpeed = 1.0; // Reset speed to normal
+        
+        // Note: createTextBlocks() is now called separately after scroll completes
+        
+        // Update display
+        updateGameDisplay();
+        
+        console.log('prepareGame: Game preparation completed successfully');
+    } catch (error) {
+        console.error('prepareGame: Error during game preparation:', error);
+        if (typeof appendOutput !== 'undefined') {
+            appendOutput('Error preparing game: ' + error.message);
+        }
+    }
 }
 
 function startGame() {
-    if (gameRunning) return;
-    
-    // Safety check - ensure we have blocks to destroy
-    if (fishBlocks.length === 0) {
-        console.error('Cannot start game - no fish blocks created!');
-        return;
-    }
-    
-    gameRunning = true;
-    const monitorContent = document.querySelector('.monitor-content');
-    
-    // Remove space prompt
-    const spacePrompt = document.getElementById('game-space-prompt');
-    if (spacePrompt) spacePrompt.remove();
-    
-    // Hide tap to start button if exists (don't remove, just hide for potential restart)
-    if (tapToStartButton) {
-        tapToStartButton.style.display = 'none';
-    }
-    
-    // Scroll to show fish near top (especially important on mobile)
-    const fishArt = document.getElementById('fish-art');
-    if (fishArt) {
-        setTimeout(() => {
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-            if (isMobile) {
-                // On mobile: scroll fish to the very top
-                monitorContent.scrollTop = 0;
-                console.log('Game started on mobile, scrolled to top');
-            } else {
-                // On desktop: scroll fish near top with small margin
-                const scrollTarget = fishArt.offsetTop - 20;
-                monitorContent.scrollTop = scrollTarget;
-                console.log('Game started, scrolled to:', scrollTarget);
+    try {
+        console.log('startGame: Starting game...');
+        
+        if (gameRunning) {
+            console.log('startGame: Game already running');
+            return;
+        }
+        
+        // Safety check - ensure we have blocks to destroy
+        if (fishBlocks.length === 0) {
+            console.error('startGame: Cannot start game - no fish blocks created!');
+            if (typeof appendOutput !== 'undefined') {
+                appendOutput('Error: No game blocks available. Please try restarting the game.');
             }
-        }, 100);
+            return;
+        }
+        
+        gameRunning = true;
+        const monitorContent = document.querySelector('.monitor-content');
+        
+        if (!monitorContent) {
+            console.error('startGame: monitor-content not found');
+            gameRunning = false;
+            return;
+        }
+        
+        // Remove space prompt
+        const spacePrompt = document.getElementById('game-space-prompt');
+        if (spacePrompt) spacePrompt.remove();
+        
+        // Hide tap to start button if exists (don't remove, just hide for potential restart)
+        if (tapToStartButton) {
+            tapToStartButton.style.display = 'none';
+        }
+        
+        // Scroll to show fish near top (especially important on mobile)
+        const fishArt = document.getElementById('fish-art');
+        if (fishArt) {
+            setTimeout(() => {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+                if (isMobile) {
+                    // On mobile: scroll fish to the very top
+                    monitorContent.scrollTop = 0;
+                    console.log('Game started on mobile, scrolled to top');
+                } else {
+                    // On desktop: scroll fish near top with small margin
+                    const scrollTarget = fishArt.offsetTop - 20;
+                    monitorContent.scrollTop = scrollTarget;
+                    console.log('Game started, scrolled to:', scrollTarget);
+                }
+            }, 100);
+        }
+        
+        // Event listeners
+        document.addEventListener('keydown', keyDownHandler);
+        document.addEventListener('keyup', keyUpHandler);
+        monitorContent.addEventListener('mousemove', mouseMoveHandler);
+        
+        // Start game loop
+        gameLoop();
+        
+        console.log('startGame: Game started successfully');
+    } catch (error) {
+        console.error('startGame: Error starting game:', error);
+        gameRunning = false;
+        if (typeof appendOutput !== 'undefined') {
+            appendOutput('Error starting game: ' + error.message);
+        }
     }
-    
-    // Event listeners
-    document.addEventListener('keydown', keyDownHandler);
-    document.addEventListener('keyup', keyUpHandler);
-    monitorContent.addEventListener('mousemove', mouseMoveHandler);
-    
-    // Start game loop
-    gameLoop();
 }
 
 function createTextBlocks() {
-    fishBlocks = [];
-    
-    const monitorContent = document.querySelector('.monitor-content');
-    const contentRect = monitorContent.getBoundingClientRect();
-    
-    // Character dimensions
-    const charWidth = 8.4;
-    const charHeight = 16;
-    
-    // Get fish element by ID
-    const fishElement = document.getElementById('fish-art');
-    
-    if (fishElement && fishElement.offsetParent !== null) {
+    try {
+        console.log('createTextBlocks: Starting block creation...');
+        fishBlocks = [];
+        
+        const monitorContent = document.querySelector('.monitor-content');
+        if (!monitorContent) {
+            console.error('createTextBlocks: monitor-content not found');
+            return;
+        }
+        
+        const contentRect = monitorContent.getBoundingClientRect();
+        
+        // Character dimensions
+        const charWidth = 8.4;
+        const charHeight = 16;
+        
+        // Get fish element by ID
+        const fishElement = document.getElementById('fish-art');
+        
+        // Enhanced element checks
+        if (!fishElement) {
+            console.error('createTextBlocks: fish-art element not found');
+            return;
+        }
+        
+        // Check if element is visible and has proper dimensions
+        if (fishElement.offsetParent === null) {
+            console.warn('createTextBlocks: fish-art element is not visible (offsetParent is null)');
+            return;
+        }
+        
         const rect = fishElement.getBoundingClientRect();
         
-        // Check if fish is already wrapped in spans (from previous game)
-        const hasSpans = fishElement.querySelector('span') !== null;
-        let text;
+        // Check if element has valid dimensions
+        if (rect.width === 0 || rect.height === 0) {
+            console.warn('createTextBlocks: fish-art element has zero dimensions', rect);
+            return;
+        }
         
-        if (hasSpans) {
-            // If already has spans, get original text from data attribute or reconstruct
-            text = fishElement.getAttribute('data-original-text');
-            if (!text) {
-                // Reconstruct text from existing structure
+        console.log('createTextBlocks: Fish element found and visible', {
+            rect: rect,
+            offsetParent: fishElement.offsetParent,
+            innerHTML: fishElement.innerHTML.substring(0, 100) + '...'
+        });
+        
+        // First, try to get original text from data attribute (from previous game run)
+        let text = fishElement.getAttribute('data-original-text');
+        
+        if (!text) {
+            // Check if we have game blocks already (spans with game structure)
+            const hasGameBlocks = fishElement.querySelector('div') !== null;
+            
+            if (hasGameBlocks) {
+                // Reconstruct from game block structure
+                console.log('createTextBlocks: Reconstructing from game block structure');
                 const lines = Array.from(fishElement.children);
                 text = lines.map(line => {
                     const spans = Array.from(line.querySelectorAll('span'));
                     return spans.map(span => span.textContent).join('');
                 }).join('\n');
+            } else {
+                // Get text content directly (typeText just finished)
+                console.log('createTextBlocks: Getting text from typeText output');
+                // Remove cursor element if present
+                const cursor = fishElement.querySelector('.typing-cursor');
+                if (cursor) {
+                    cursor.remove();
+                    console.log('createTextBlocks: Removed typing cursor');
+                }
+                
+                text = fishElement.textContent;
+                
+                // Store original text for future use
+                if (text && text.trim().length > 0) {
+                    fishElement.setAttribute('data-original-text', text);
+                    console.log('createTextBlocks: Stored original text');
+                }
             }
+            
+            console.log('createTextBlocks: Retrieved text, length:', text ? text.length : 0);
         } else {
-            // First time - get text content
-            text = fishElement.textContent;
-            // Store original text
-            fishElement.setAttribute('data-original-text', text);
+            console.log('createTextBlocks: Using stored original text, length:', text.length);
+        }
+        
+        if (!text || text.trim().length === 0) {
+            console.error('createTextBlocks: fish art text is empty or invalid');
+            console.error('createTextBlocks: fishElement.innerHTML:', fishElement.innerHTML);
+            console.error('createTextBlocks: fishElement.textContent:', fishElement.textContent);
+            return;
         }
         
         const lines = text.split('\n');
+        console.log('createTextBlocks: Processing', lines.length, 'lines');
         
         const relativeX = rect.left - contentRect.left;
         const relativeY = rect.top - contentRect.top + monitorContent.scrollTop;
@@ -621,6 +836,7 @@ function createTextBlocks() {
         // Clear and rebuild fish element with spans
         fishElement.innerHTML = '';
         
+        let blockCount = 0;
         lines.forEach((line, lineIndex) => {
             const lineDiv = document.createElement('div');
             lineDiv.style.whiteSpace = 'pre';
@@ -651,11 +867,17 @@ function createTextBlocks() {
                         char: char,
                         element: charSpan
                     });
+                    blockCount++;
                 }
             }
             
             fishElement.appendChild(lineDiv);
         });
+        
+        console.log('createTextBlocks: Successfully created', blockCount, 'blocks');
+    } catch (error) {
+        console.error('createTextBlocks: Error creating blocks:', error);
+        fishBlocks = [];
     }
 }
 
@@ -987,14 +1209,14 @@ function endGame() {
     appendOutput('');
     
     // Set up game over input handler
-    waitingForGameResponse = true;
+    window.waitingForGameResponse = true;
     const originalHandleGameResponse = window.handleGameResponse;
     
     window.handleGameResponse = function(response) {
         const trimmed = response.trim().toLowerCase();
         
         if (trimmed === 'r' || trimmed === 'restart') {
-            waitingForGameResponse = false;
+            window.waitingForGameResponse = false;
             window.handleGameResponse = originalHandleGameResponse;
             
             appendOutput('$ ' + response, 'terminal-prompt');
@@ -1010,7 +1232,7 @@ function endGame() {
                 showGameInstructions();
             }, 500);
         } else if (trimmed === 'q' || trimmed === 'quit' || trimmed === 'exit') {
-            waitingForGameResponse = false;
+            window.waitingForGameResponse = false;
             window.handleGameResponse = originalHandleGameResponse;
             
             appendOutput('$ ' + response, 'terminal-prompt');
@@ -1094,14 +1316,14 @@ function winGame() {
     appendOutput('');
     
     // Set up game over input handler
-    waitingForGameResponse = true;
+    window.waitingForGameResponse = true;
     const originalHandleGameResponse = window.handleGameResponse;
     
     window.handleGameResponse = function(response) {
         const trimmed = response.trim().toLowerCase();
         
         if (trimmed === 'r' || trimmed === 'restart') {
-            waitingForGameResponse = false;
+            window.waitingForGameResponse = false;
             window.handleGameResponse = originalHandleGameResponse;
             
             appendOutput('$ ' + response, 'terminal-prompt');
@@ -1117,7 +1339,7 @@ function winGame() {
                 showGameInstructions();
             }, 500);
         } else if (trimmed === 'q' || trimmed === 'quit' || trimmed === 'exit') {
-            waitingForGameResponse = false;
+            window.waitingForGameResponse = false;
             window.handleGameResponse = originalHandleGameResponse;
             
             appendOutput('$ ' + response, 'terminal-prompt');
