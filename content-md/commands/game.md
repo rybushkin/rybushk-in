@@ -12,13 +12,11 @@ $ game
 Launching: Vibe‑Break / Fishanoid Edition…
 
 Break the blocks. Free the fish. Pretend it's productive.
-
-Start the game? (y/n)
 ```
 
 ## Instructions
 
-Инструкции по управлению игрой (отображаются после подтверждения запуска):
+Инструкции по управлению игрой (отображаются при запуске):
 
 ```
 Controls:
