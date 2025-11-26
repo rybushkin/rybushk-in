@@ -590,7 +590,7 @@ function prepareGame() {
     divider.textContent = '━'.repeat(Math.floor(contentRect.width / 7));
     gameFooterElement.appendChild(divider);
     
-    // Create info container with three columns
+    // Create info container - only score info and close button
     scoreElement = document.createElement('div');
     scoreElement.id = 'game-score-display';
     scoreElement.style.display = 'flex';
@@ -599,23 +599,22 @@ function prepareGame() {
     scoreElement.style.alignItems = 'center';
     scoreElement.style.flex = '1';
     scoreElement.innerHTML = `
-        <div style="text-align: left; flex: 1;">
-            <div id="game-player">Player: ${playerName || 'Player'}</div>
-            <div id="game-lives">Lives: 3</div>
-            <div id="game-score">Score: 0</div>
-            <div id="game-speed">Speed: 1.0x</div>
+        <div style="text-align: left; flex: 1; font-size: 12px;">
+            <span id="game-lives">Lives: 3</span> | <span id="game-score">Score: 0</span>
         </div>
-        <div style="text-align: center; flex: 1; font-size: 10px; line-height: 1.3;">
-            <div>← → / Mouse: Move</div>
-            <div>SPACE: Launch</div>
-        </div>
-        <div style="text-align: right; flex: 1; font-size: 10px; line-height: 1.3;">
-            <div>R: Restart</div>
-            <div>Q: Quit</div>
-            <div>+/-: Speed</div>
-        </div>
+        <button id="game-close-button" style="background: transparent; border: 2px solid var(--accent); color: var(--accent); font-size: 18px; width: 30px; height: 30px; cursor: pointer; font-family: monospace; padding: 0; line-height: 1; border-radius: 4px; text-shadow: 0 0 5px var(--accent); box-shadow: 0 0 10px var(--accent);">✕</button>
     `;
     gameFooterElement.appendChild(scoreElement);
+    
+    // Add close button handler
+    setTimeout(() => {
+        const closeButton = document.getElementById('game-close-button');
+        if (closeButton) {
+            closeButton.addEventListener('click', () => {
+                endGame();
+            });
+        }
+    }, 100);
     
     // Initialize game objects (relative coordinates)
     // Paddle positioned low, just above the footer
@@ -623,7 +622,7 @@ function prepareGame() {
         // On mobile: paddle above footer (60px footer + 20px margin = 80px from bottom)
         paddle = {
             x: gameWidth / 2 - 60,
-            y: gameHeight - 80,
+            y: gameHeight - 100,
             width: 120,
             height: 20,
             speed: 8,
@@ -632,7 +631,7 @@ function prepareGame() {
         
         ball = {
             x: gameWidth / 2,
-            y: gameHeight - 100, // Ball starts on paddle
+            y: gameHeight - 120, // Ball starts on paddle
             radius: 10,
             dx: 0,
             dy: 0,
@@ -642,7 +641,7 @@ function prepareGame() {
         // On desktop: paddle positioned low, just above the footer (70px = 60px footer + 10px margin)
         paddle = {
             x: gameWidth / 2 - 60,
-            y: gameHeight - 75,
+            y: gameHeight - 100,
             width: 120,
             height: 20,
             speed: 8,
@@ -651,7 +650,7 @@ function prepareGame() {
         
         ball = {
             x: gameWidth / 2,
-            y: gameHeight - 95, // Ball starts on paddle
+            y: gameHeight - 120, // Ball starts on paddle
             radius: 10,
             dx: 0,
             dy: 0,
@@ -717,20 +716,6 @@ function startGame() {
         
         // Check if mobile
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-        
-        // On mobile: hide monitor header and footer for full game screen
-        if (isMobile) {
-            const monitorHeader = document.querySelector('.monitor-header');
-            const monitorFooter = document.querySelector('.monitor-footer');
-            if (monitorHeader) {
-                monitorHeader.style.display = 'none';
-                console.log('Mobile: Hidden monitor header');
-            }
-            if (monitorFooter) {
-                monitorFooter.style.display = 'none';
-                console.log('Mobile: Hidden monitor footer');
-            }
-        }
         
         // Scroll to show fish near top (especially important on mobile)
         const fishArt = document.getElementById('fish-art');
@@ -965,22 +950,13 @@ function updateGameDisplay() {
     }
     
     // Update score and lives in footer
-    const playerElement = document.getElementById('game-player');
     const livesElement = document.getElementById('game-lives');
     const scoreDisplay = document.getElementById('game-score');
-    const speedDisplay = document.getElementById('game-speed');
-    if (playerElement) {
-        playerElement.textContent = `Player: ${playerName || 'Player'}`;
-    }
     if (livesElement) {
         livesElement.textContent = `Lives: ${lives}`;
     }
     if (scoreDisplay) {
-        const activeBlocks = fishBlocks.filter(b => b.active).length;
-        scoreDisplay.textContent = `Score: ${score} | Blocks: ${activeBlocks}`;
-    }
-    if (speedDisplay) {
-        speedDisplay.textContent = `Speed: ${gameSpeed.toFixed(1)}x`;
+        scoreDisplay.textContent = `Score: ${score}`;
     }
     
     // Hide hit fish characters
@@ -1220,20 +1196,6 @@ function endGame() {
     });
     fishBlocks = [];
     
-    // Restore monitor header and footer on mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-    if (isMobile) {
-        const monitorHeader = document.querySelector('.monitor-header');
-        const monitorFooter = document.querySelector('.monitor-footer');
-        if (monitorHeader) {
-            monitorHeader.style.display = '';
-            console.log('Mobile: Restored monitor header');
-        }
-        if (monitorFooter) {
-            monitorFooter.style.display = '';
-            console.log('Mobile: Restored monitor footer');
-        }
-    }
     
     // Show terminal input line
     const inputLine = document.getElementById('terminal-input-line');
@@ -1340,20 +1302,6 @@ function winGame() {
     });
     fishBlocks = [];
     
-    // Restore monitor header and footer on mobile
-    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
-    if (isMobile) {
-        const monitorHeader = document.querySelector('.monitor-header');
-        const monitorFooter = document.querySelector('.monitor-footer');
-        if (monitorHeader) {
-            monitorHeader.style.display = '';
-            console.log('Mobile: Restored monitor header');
-        }
-        if (monitorFooter) {
-            monitorFooter.style.display = '';
-            console.log('Mobile: Restored monitor footer');
-        }
-    }
     
     // Show terminal input line
     const inputLine = document.getElementById('terminal-input-line');
