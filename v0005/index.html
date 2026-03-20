@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>rybushk.in v.5.2</title>
+    <title>rybushk.in v.5.3</title>
     
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6VH9684RN"></script>
@@ -238,7 +238,7 @@
             <div class="header-content-row">
                 <div class="header-left" style="flex: 0 0 auto;">
                     <div class="logo-header" id="logo-header">rybushk.in</div>
-                    <span class="logo-version" id="header-version">v.5.2</span>
+                    <span class="logo-version" id="header-version">v.5.3</span>
                 </div>
                 <div class="window-controls" style="border: none; padding: 0; margin-left: auto;">
                     <span title="Minimize" onclick="minimizeWindow()" style="border: none; padding: 0 4px; background: transparent; box-shadow: none;">▼</span>
@@ -267,7 +267,7 @@
                     <div class="guestbook-toolbar">
                         <div>
                             <div class="guestbook-kicker">PUBLIC TERMINAL LOG</div>
-                            <h2>Guestbook / v5.2</h2>
+                            <h2>Guestbook / v5.3</h2>
                             <p>Leave a comment without registration. Name and contact are optional.</p>
                         </div>
                         <button type="button" id="guestbook-close" class="guestbook-button guestbook-button-secondary guestbook-button-block">
@@ -379,8 +379,55 @@
             limit: 4,
             totalPages: 1,
             isOpen: false,
-            isLoading: false
+            isLoading: false,
+            mode: 'server'
         };
+        const GUESTBOOK_STORAGE_KEY = 'rybushk_v53_guestbook_entries';
+        const GUESTBOOK_RATE_LIMIT_KEY = 'rybushk_v53_guestbook_last_submit';
+        const GUESTBOOK_STATIC_SEED = [
+            {
+                id: 1,
+                name: 'Anonymous fish',
+                contact: '',
+                message: 'Found this terminal by accident. Stayed for the CRT glow and mild existential comfort.',
+                createdAt: '2026-03-20T17:34:55.000Z'
+            },
+            {
+                id: 2,
+                name: 'Masha',
+                contact: '@mashawrites',
+                message: 'Very 90s, very alive. Feels like the internet before it became a shopping mall.',
+                createdAt: '2026-03-20T17:35:55.000Z'
+            },
+            {
+                id: 3,
+                name: 'Old modem wizard',
+                contact: 'wizard@dialup.zone',
+                message: 'Typed "help", got charm. Typed "guestbook", got nostalgia. 10/10 packet loss experience.',
+                createdAt: '2026-03-20T17:36:55.000Z'
+            },
+            {
+                id: 4,
+                name: 'Tim',
+                contact: '',
+                message: 'Papa, this is cool. Keep the fish. Add more secrets.',
+                createdAt: '2026-03-20T17:37:55.000Z'
+            },
+            {
+                id: 5,
+                name: 'Late-night visitor',
+                contact: '',
+                message: 'The best portfolio mood is when it feels like a machine is happy you are here.',
+                createdAt: '2026-03-20T17:38:55.000Z'
+            },
+            {
+                id: 6,
+                name: 'Retro UI appreciator',
+                contact: 'https://example.com/radical-interfaces',
+                message: 'Guestbook confirmed: text-first interfaces still hit harder than glossy templates.',
+                createdAt: '2026-03-20T17:39:55.000Z'
+            }
+        ];
 
         // Fish ASCII art - animated frames
         const fishFrames = [
@@ -1099,6 +1146,63 @@
             });
         }
 
+        function getStaticGuestbookEntries() {
+            try {
+                const stored = localStorage.getItem(GUESTBOOK_STORAGE_KEY);
+                if (!stored) {
+                    localStorage.setItem(GUESTBOOK_STORAGE_KEY, JSON.stringify(GUESTBOOK_STATIC_SEED));
+                    return [...GUESTBOOK_STATIC_SEED];
+                }
+
+                const parsed = JSON.parse(stored);
+                return Array.isArray(parsed) && parsed.length ? parsed : [...GUESTBOOK_STATIC_SEED];
+            } catch (error) {
+                return [...GUESTBOOK_STATIC_SEED];
+            }
+        }
+
+        function saveStaticGuestbookEntries(entries) {
+            localStorage.setItem(GUESTBOOK_STORAGE_KEY, JSON.stringify(entries));
+        }
+
+        function getStaticGuestbookPage(page = 1) {
+            const allEntries = [...getStaticGuestbookEntries()].sort((a, b) => {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+            const limit = guestbookState.limit;
+            const safePage = Math.max(1, page);
+            const totalItems = allEntries.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+            const currentPage = Math.min(safePage, totalPages);
+            const start = (currentPage - 1) * limit;
+            const items = allEntries.slice(start, start + limit);
+
+            return {
+                items,
+                pagination: {
+                    page: currentPage,
+                    limit,
+                    totalItems,
+                    totalPages,
+                    hasPrev: currentPage > 1,
+                    hasNext: currentPage < totalPages
+                }
+            };
+        }
+
+        function setGuestbookMode(mode) {
+            guestbookState.mode = mode;
+        }
+
+        function saveStaticGuestbookRateLimit() {
+            localStorage.setItem(GUESTBOOK_RATE_LIMIT_KEY, String(Date.now()));
+        }
+
+        function isStaticGuestbookRateLimited() {
+            const lastSubmit = Number(localStorage.getItem(GUESTBOOK_RATE_LIMIT_KEY) || 0);
+            return Boolean(lastSubmit) && (Date.now() - lastSubmit) < 30000;
+        }
+
         function renderGuestbookEntries(items) {
             const listEl = document.getElementById('guestbook-list');
             if (!listEl) return;
@@ -1179,12 +1283,13 @@
             setGuestbookStatus(SiteTexts.commands.guestbook.loading, 'muted');
 
             try {
-                const response = await fetch(`/api/guestbook?page=${page}&limit=${guestbookState.limit}`);
+                const response = await fetch(`./api/guestbook?page=${page}&limit=${guestbookState.limit}`);
                 if (!response.ok) {
                     throw new Error('Failed to load guestbook feed.');
                 }
 
                 const payload = await response.json();
+                setGuestbookMode('server');
                 renderGuestbookEntries(payload.items || []);
                 updateGuestbookPagination(payload.pagination || {
                     page: 1,
@@ -1193,8 +1298,11 @@
                     hasNext: false
                 });
             } catch (error) {
-                renderGuestbookEntries([]);
-                setGuestbookStatus(error.message || 'Guestbook server is unavailable.', 'error');
+                const payload = getStaticGuestbookPage(page);
+                setGuestbookMode('static');
+                renderGuestbookEntries(payload.items || []);
+                updateGuestbookPagination(payload.pagination);
+                setGuestbookStatus('Static mode: entries are stored in this browser for GitHub Pages preview.', 'muted');
             } finally {
                 guestbookState.isLoading = false;
                 updateGuestbookPagination({
@@ -1277,21 +1385,47 @@
             setGuestbookFormStatus('Transmitting entry...', 'muted');
 
             try {
-                const response = await fetch('/api/guestbook', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
+                try {
+                    const response = await fetch('./api/guestbook', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
 
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok) {
-                    throw new Error(result.error || SiteTexts.commands.guestbook.submitError);
+                    const result = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        throw new Error(result.error || SiteTexts.commands.guestbook.submitError);
+                    }
+
+                    setGuestbookMode('server');
+                } catch (error) {
+                    if (isStaticGuestbookRateLimited()) {
+                        throw new Error(SiteTexts.commands.guestbook.rateLimit);
+                    }
+
+                    const staticEntries = getStaticGuestbookEntries();
+                    const nextId = staticEntries.reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
+                    staticEntries.push({
+                        id: nextId,
+                        name: payload.name.trim() || 'Anonymous fish',
+                        contact: payload.contact.trim(),
+                        message: payload.message.trim(),
+                        createdAt: new Date().toISOString()
+                    });
+                    saveStaticGuestbookEntries(staticEntries);
+                    saveStaticGuestbookRateLimit();
+                    setGuestbookMode('static');
                 }
 
                 form.reset();
-                setGuestbookFormStatus(SiteTexts.commands.guestbook.submitSuccess, 'success');
+                setGuestbookFormStatus(
+                    guestbookState.mode === 'static'
+                        ? 'Entry saved in static mode. It will stay in this browser.'
+                        : SiteTexts.commands.guestbook.submitSuccess,
+                    'success'
+                );
                 await loadGuestbookPage(1);
             } catch (error) {
                 const errorMessage = error.message?.includes('30 seconds')
@@ -1357,7 +1491,7 @@
 
             typeTextWithLoader(SiteTexts.commands.changelog.intro, async () => {
                 try {
-                    const response = await fetch(`/CHANGELOG.md?ts=${Date.now()}`);
+                    const response = await fetch(`./CHANGELOG.md?ts=${Date.now()}`);
                     if (!response.ok) {
                         throw new Error('Failed to load changelog.');
                     }

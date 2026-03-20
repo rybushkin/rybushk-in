@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## v5.3 - 2026-03-20
+- bumped the visible site version to `v.5.3`
+- made the guestbook dual-mode: it now uses the backend when available and falls back to static browser storage on GitHub Pages
+- switched `changelog` loading to relative paths so it also works from the deployed subfolder
+- prepared the web build for fast phone testing without waiting for a server deploy
+
 ## v5.2 - 2026-03-20
 - bumped the visible site version to `v.5.2`
 - added terminal command `changelog` to read this file from inside the site
@@ -27,3 +33,4 @@
 - added preloader and post-boot promo text for the guestbook
 - fixed a bug where the preloader only showed the warning block and hid the new promo copy
 - expanded the preloader into a typed old-school message with cursor, ASCII plaque, and invitation to leave reviews
+- converted the deployed web build to static fallback mode for GitHub Pages and phone testing
