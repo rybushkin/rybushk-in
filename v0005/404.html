@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg: #000000;
+            --text: #00ff00;
+            --accent: #00ff00;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            font-size: 15px;
+            line-height: 23px;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        .error-text {
+            color: var(--text);
+        }
+
+        .error-text a {
+            color: var(--accent);
+            text-decoration: underline;
+        }
+
+        .error-text a:hover {
+            text-shadow: 0 0 5px var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="error-text">ERROR 404 - <a href="https://rybushk.in">Take me home</a></div>
+    </div>
+</body>
+</html>
