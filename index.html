@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>rybushk.in v.4.1</title>
+    <title>rybushk.in v.5.3</title>
     
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6VH9684RN"></script>
@@ -80,6 +80,32 @@
         @keyframes blink {
             0%, 49% { opacity: 1; }
             50%, 100% { opacity: 0; }
+        }
+        /* Glitch animation for terminal prompt */
+        .terminal-prompt {
+            position: relative;
+            display: inline-block;
+            font-family: 'Courier New', monospace;
+        }
+        .terminal-prompt.glitching {
+            animation: glitch-prompt 0.3s infinite;
+        }
+        @keyframes glitch-prompt {
+            0%, 100% {
+                transform: translate(0, 0);
+            }
+            20% {
+                transform: translate(-1px, 1px);
+            }
+            40% {
+                transform: translate(1px, -1px);
+            }
+            60% {
+                transform: translate(-1px, 0);
+            }
+            80% {
+                transform: translate(1px, 0);
+            }
         }
         /* ASCII borders - точное соответствие ширине */
         .ascii-border-top,
@@ -212,7 +238,7 @@
             <div class="header-content-row">
                 <div class="header-left" style="flex: 0 0 auto;">
                     <div class="logo-header" id="logo-header">rybushk.in</div>
-                    <span class="logo-version" id="header-version">v.4.1</span>
+                    <span class="logo-version" id="header-version">v.5.3</span>
                 </div>
                 <div class="window-controls" style="border: none; padding: 0; margin-left: auto;">
                     <span title="Minimize" onclick="minimizeWindow()" style="border: none; padding: 0 4px; background: transparent; box-shadow: none;">▼</span>
@@ -234,6 +260,50 @@
                     </div>
                     <div id="game-prompt" class="game-prompt" style="display: none;"></div>
                     <div id="game-info" class="game-info" style="display: none;"></div>
+                </div>
+            </section>
+            <section id="guestbook-panel" class="guestbook-panel" hidden aria-hidden="true">
+                <div class="guestbook-shell">
+                    <div class="guestbook-toolbar">
+                        <div>
+                            <div class="guestbook-kicker">PUBLIC TERMINAL LOG</div>
+                            <h2>Guestbook / v5.3</h2>
+                            <p>Leave a comment without registration. Name and contact are optional.</p>
+                        </div>
+                        <button type="button" id="guestbook-close" class="guestbook-button guestbook-button-secondary guestbook-button-block">
+                            <span class="guestbook-button-block-fill" aria-hidden="true"></span>
+                            <span class="guestbook-button-block-text">close [esc]</span>
+                        </button>
+                    </div>
+                    <div class="guestbook-grid">
+                        <form id="guestbook-form" class="guestbook-form">
+                            <div class="guestbook-form-title">Write to the feed</div>
+                            <label class="guestbook-label" for="guestbook-name">Name (optional)</label>
+                            <input id="guestbook-name" name="name" class="guestbook-input" type="text" maxlength="60" placeholder="Anonymous fish">
+
+                            <label class="guestbook-label" for="guestbook-contact">Contact (optional)</label>
+                            <input id="guestbook-contact" name="contact" class="guestbook-input" type="text" maxlength="120" placeholder="@telegram / email / link">
+
+                            <label class="guestbook-label" for="guestbook-message">Comment</label>
+                            <textarea id="guestbook-message" name="message" class="guestbook-textarea" rows="7" maxlength="600" required placeholder="Leave a trace in the terminal lore..."></textarea>
+
+                            <div id="guestbook-form-status" class="guestbook-form-status" aria-live="polite"></div>
+                            <button type="submit" id="guestbook-submit" class="guestbook-button">transmit entry</button>
+                        </form>
+
+                        <div class="guestbook-feed">
+                            <div class="guestbook-feed-header">
+                                <div class="guestbook-form-title">Latest entries</div>
+                                <div id="guestbook-page-indicator" class="guestbook-page-indicator">page 1 / 1</div>
+                            </div>
+                            <div id="guestbook-status" class="guestbook-status" aria-live="polite"></div>
+                            <div id="guestbook-list" class="guestbook-list"></div>
+                            <div class="guestbook-pagination">
+                                <button type="button" id="guestbook-prev" class="guestbook-button guestbook-button-secondary">prev</button>
+                                <button type="button" id="guestbook-next" class="guestbook-button guestbook-button-secondary">next</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
@@ -304,6 +374,60 @@
             window.waitingForGameResponse = false;
         }
         let fluidGlassModeActive = false;
+        const guestbookState = {
+            page: 1,
+            limit: 4,
+            totalPages: 1,
+            isOpen: false,
+            isLoading: false,
+            mode: 'server'
+        };
+        const GUESTBOOK_STORAGE_KEY = 'rybushk_v53_guestbook_entries';
+        const GUESTBOOK_RATE_LIMIT_KEY = 'rybushk_v53_guestbook_last_submit';
+        const GUESTBOOK_STATIC_SEED = [
+            {
+                id: 1,
+                name: 'Anonymous fish',
+                contact: '',
+                message: 'Found this terminal by accident. Stayed for the CRT glow and mild existential comfort.',
+                createdAt: '2026-03-20T17:34:55.000Z'
+            },
+            {
+                id: 2,
+                name: 'Masha',
+                contact: '@mashawrites',
+                message: 'Very 90s, very alive. Feels like the internet before it became a shopping mall.',
+                createdAt: '2026-03-20T17:35:55.000Z'
+            },
+            {
+                id: 3,
+                name: 'Old modem wizard',
+                contact: 'wizard@dialup.zone',
+                message: 'Typed "help", got charm. Typed "guestbook", got nostalgia. 10/10 packet loss experience.',
+                createdAt: '2026-03-20T17:36:55.000Z'
+            },
+            {
+                id: 4,
+                name: 'Tim',
+                contact: '',
+                message: 'Papa, this is cool. Keep the fish. Add more secrets.',
+                createdAt: '2026-03-20T17:37:55.000Z'
+            },
+            {
+                id: 5,
+                name: 'Late-night visitor',
+                contact: '',
+                message: 'The best portfolio mood is when it feels like a machine is happy you are here.',
+                createdAt: '2026-03-20T17:38:55.000Z'
+            },
+            {
+                id: 6,
+                name: 'Retro UI appreciator',
+                contact: 'https://example.com/radical-interfaces',
+                message: 'Guestbook confirmed: text-first interfaces still hit harder than glossy templates.',
+                createdAt: '2026-03-20T17:39:55.000Z'
+            }
+        ];
 
         // Fish ASCII art - animated frames
         const fishFrames = [
@@ -453,6 +577,8 @@
                 { text: SiteTexts.boot.startupMotd, delay: 30, type: false },
                 { text: shuffledFacts[factIndex++], delay: 30, type: false },
                 { text: SiteTexts.boot.verification, delay: 30, type: false },
+                { text: SiteTexts.boot.guestbookModule, delay: 30, type: false },
+                { text: SiteTexts.boot.guestbookInvite, delay: 60, type: false },
                 { text: '', delay: 50, type: false },
                 { text: '', delay: 100, type: false },
                 { text: fishArt, delay: 200, type: true, isAsciiArt: true, speed: 3 },
@@ -572,6 +698,23 @@
                             
                             // Обновляем максимальную допустимую высоту
                             maxAllowedScrollHeight = Math.max(maxAllowedScrollHeight, actualHeight);
+                            
+                            // Дополнительная проверка: убеждаемся, что input виден
+                            setTimeout(() => {
+                                const inputLine = document.getElementById('terminal-input-line');
+                                if (inputLine) {
+                                    const inputRect = inputLine.getBoundingClientRect();
+                                    const viewportHeight = window.innerHeight;
+                                    if (inputRect.bottom > viewportHeight) {
+                                        const scrollTop = monitorContent.scrollTop;
+                                        const targetScroll = scrollTop + (inputRect.bottom - viewportHeight) + 20;
+                                        monitorContent.scrollTo({
+                                            top: targetScroll,
+                                            behavior: 'smooth'
+                                        });
+                                    }
+                                }
+                            }, 50);
                         }
                     }
                 } else {
@@ -737,6 +880,23 @@
                                 
                                 // Обновляем максимальную допустимую высоту
                                 maxAllowedScrollHeight = Math.max(maxAllowedScrollHeight, actualHeight);
+                                
+                                // Убеждаемся, что input виден
+                                setTimeout(() => {
+                                    const inputLine = document.getElementById('terminal-input-line');
+                                    if (inputLine) {
+                                        const inputRect = inputLine.getBoundingClientRect();
+                                        const viewportHeight = window.innerHeight;
+                                        if (inputRect.bottom > viewportHeight) {
+                                            const scrollTop = monitorContent.scrollTop;
+                                            const targetScroll = scrollTop + (inputRect.bottom - viewportHeight) + 20;
+                                            monitorContent.scrollTo({
+                                                top: targetScroll,
+                                                behavior: 'smooth'
+                                            });
+                                        }
+                                    }
+                                }, 50);
                             }
                         } else {
                             // Во время игры обновляем скроллбар
@@ -744,7 +904,34 @@
                         }
                     });
                     
-                    if (callback) callback();
+                    if (callback) {
+                        callback();
+                        // Additional scroll check after callback
+                        setTimeout(() => {
+                            const monitorContent = document.querySelector('.monitor-content');
+                            if (monitorContent && (typeof gameRunning === 'undefined' || !gameRunning) && 
+                                (typeof gameWaitingForStart === 'undefined' || !gameWaitingForStart)) {
+                                const actualHeight = getActualContentHeight();
+                                const clientHeight = monitorContent.clientHeight;
+                                const maxScrollTop = Math.max(0, actualHeight - clientHeight);
+                                monitorContent.scrollTop = maxScrollTop;
+                                
+                                const inputLine = document.getElementById('terminal-input-line');
+                                if (inputLine) {
+                                    const inputRect = inputLine.getBoundingClientRect();
+                                    const viewportHeight = window.innerHeight;
+                                    if (inputRect.bottom > viewportHeight) {
+                                        const scrollTop = monitorContent.scrollTop;
+                                        const targetScroll = scrollTop + (inputRect.bottom - viewportHeight) + 20;
+                                        monitorContent.scrollTo({
+                                            top: targetScroll,
+                                            behavior: 'smooth'
+                                        });
+                                    }
+                                }
+                            }
+                        }, 100);
+                    }
                 }
             }
             
@@ -879,6 +1066,8 @@
                 document.getElementById('terminal-input').focus();
                 terminalReady = true;
                 document.removeEventListener('keydown', handleBootSkip);
+                const promoLine = appendOutput('');
+                typeText(SiteTexts.boot.postBootPromo, promoLine, null, 12);
                 return;
             }
 
@@ -924,6 +1113,396 @@
                 appendOutput(text);
                 setTimeout(() => runBootSequence(index + 1), delay);
             }
+        }
+
+        function setGuestbookStatus(message = '', tone = 'normal') {
+            const statusEl = document.getElementById('guestbook-status');
+            if (!statusEl) return;
+
+            statusEl.textContent = message;
+            statusEl.dataset.tone = tone;
+        }
+
+        function setGuestbookFormStatus(message = '', tone = 'normal') {
+            const statusEl = document.getElementById('guestbook-form-status');
+            if (!statusEl) return;
+
+            statusEl.textContent = message;
+            statusEl.dataset.tone = tone;
+        }
+
+        function formatGuestbookDate(value) {
+            const parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) {
+                return value;
+            }
+
+            return parsed.toLocaleString('en-GB', {
+                year: 'numeric',
+                month: 'short',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function getStaticGuestbookEntries() {
+            try {
+                const stored = localStorage.getItem(GUESTBOOK_STORAGE_KEY);
+                if (!stored) {
+                    localStorage.setItem(GUESTBOOK_STORAGE_KEY, JSON.stringify(GUESTBOOK_STATIC_SEED));
+                    return [...GUESTBOOK_STATIC_SEED];
+                }
+
+                const parsed = JSON.parse(stored);
+                return Array.isArray(parsed) && parsed.length ? parsed : [...GUESTBOOK_STATIC_SEED];
+            } catch (error) {
+                return [...GUESTBOOK_STATIC_SEED];
+            }
+        }
+
+        function saveStaticGuestbookEntries(entries) {
+            localStorage.setItem(GUESTBOOK_STORAGE_KEY, JSON.stringify(entries));
+        }
+
+        function getStaticGuestbookPage(page = 1) {
+            const allEntries = [...getStaticGuestbookEntries()].sort((a, b) => {
+                return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            });
+            const limit = guestbookState.limit;
+            const safePage = Math.max(1, page);
+            const totalItems = allEntries.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / limit));
+            const currentPage = Math.min(safePage, totalPages);
+            const start = (currentPage - 1) * limit;
+            const items = allEntries.slice(start, start + limit);
+
+            return {
+                items,
+                pagination: {
+                    page: currentPage,
+                    limit,
+                    totalItems,
+                    totalPages,
+                    hasPrev: currentPage > 1,
+                    hasNext: currentPage < totalPages
+                }
+            };
+        }
+
+        function setGuestbookMode(mode) {
+            guestbookState.mode = mode;
+        }
+
+        function saveStaticGuestbookRateLimit() {
+            localStorage.setItem(GUESTBOOK_RATE_LIMIT_KEY, String(Date.now()));
+        }
+
+        function isStaticGuestbookRateLimited() {
+            const lastSubmit = Number(localStorage.getItem(GUESTBOOK_RATE_LIMIT_KEY) || 0);
+            return Boolean(lastSubmit) && (Date.now() - lastSubmit) < 30000;
+        }
+
+        function renderGuestbookEntries(items) {
+            const listEl = document.getElementById('guestbook-list');
+            if (!listEl) return;
+
+            listEl.innerHTML = '';
+
+            if (!items.length) {
+                setGuestbookStatus(SiteTexts.commands.guestbook.empty, 'muted');
+                return;
+            }
+
+            for (const item of items) {
+                const card = document.createElement('article');
+                card.className = 'guestbook-entry';
+
+                const header = document.createElement('div');
+                header.className = 'guestbook-entry-header';
+
+                const name = document.createElement('div');
+                name.className = 'guestbook-entry-name';
+                name.textContent = item.name || 'Anonymous fish';
+
+                const date = document.createElement('div');
+                date.className = 'guestbook-entry-date';
+                date.textContent = formatGuestbookDate(item.createdAt);
+
+                header.appendChild(name);
+                header.appendChild(date);
+
+                const message = document.createElement('p');
+                message.className = 'guestbook-entry-message';
+                message.textContent = item.message;
+
+                card.appendChild(header);
+                if (item.contact) {
+                    const contact = document.createElement('div');
+                    contact.className = 'guestbook-entry-contact';
+                    contact.textContent = `contact: ${item.contact}`;
+                    card.appendChild(contact);
+                }
+                card.appendChild(message);
+
+                listEl.appendChild(card);
+            }
+
+            setGuestbookStatus('', 'normal');
+        }
+
+        function updateGuestbookPagination(pagination) {
+            guestbookState.page = pagination.page;
+            guestbookState.totalPages = pagination.totalPages;
+
+            const indicator = document.getElementById('guestbook-page-indicator');
+            const prevButton = document.getElementById('guestbook-prev');
+            const nextButton = document.getElementById('guestbook-next');
+
+            if (indicator) {
+                indicator.textContent = `page ${pagination.page} / ${pagination.totalPages}`;
+            }
+
+            if (prevButton) {
+                prevButton.disabled = !pagination.hasPrev || guestbookState.isLoading;
+            }
+
+            if (nextButton) {
+                nextButton.disabled = !pagination.hasNext || guestbookState.isLoading;
+            }
+        }
+
+        async function loadGuestbookPage(page = 1) {
+            guestbookState.isLoading = true;
+            updateGuestbookPagination({
+                page: guestbookState.page,
+                totalPages: guestbookState.totalPages,
+                hasPrev: guestbookState.page > 1,
+                hasNext: guestbookState.page < guestbookState.totalPages
+            });
+            setGuestbookStatus(SiteTexts.commands.guestbook.loading, 'muted');
+
+            try {
+                const response = await fetch(`./api/guestbook?page=${page}&limit=${guestbookState.limit}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load guestbook feed.');
+                }
+
+                const payload = await response.json();
+                setGuestbookMode('server');
+                renderGuestbookEntries(payload.items || []);
+                updateGuestbookPagination(payload.pagination || {
+                    page: 1,
+                    totalPages: 1,
+                    hasPrev: false,
+                    hasNext: false
+                });
+            } catch (error) {
+                const payload = getStaticGuestbookPage(page);
+                setGuestbookMode('static');
+                renderGuestbookEntries(payload.items || []);
+                updateGuestbookPagination(payload.pagination);
+                setGuestbookStatus('Static mode: entries are stored in this browser for GitHub Pages preview.', 'muted');
+            } finally {
+                guestbookState.isLoading = false;
+                updateGuestbookPagination({
+                    page: guestbookState.page,
+                    totalPages: guestbookState.totalPages,
+                    hasPrev: guestbookState.page > 1,
+                    hasNext: guestbookState.page < guestbookState.totalPages
+                });
+            }
+        }
+
+        function openGuestbookPanel() {
+            const panel = document.getElementById('guestbook-panel');
+            const nameInput = document.getElementById('guestbook-name');
+            if (!panel) return;
+
+            panel.hidden = false;
+            panel.setAttribute('aria-hidden', 'false');
+            panel.classList.add('is-open');
+            panel.classList.remove('is-closing');
+            panel.classList.add('is-opening');
+            guestbookState.isOpen = true;
+
+            const terminalInput = document.getElementById('terminal-input');
+            if (terminalInput) {
+                terminalInput.blur();
+            }
+
+            setGuestbookFormStatus('', 'normal');
+            loadGuestbookPage(guestbookState.page);
+
+            if (nameInput) {
+                setTimeout(() => nameInput.focus(), 30);
+            }
+
+            window.clearTimeout(openGuestbookPanel.animationTimeout);
+            openGuestbookPanel.animationTimeout = window.setTimeout(() => {
+                panel.classList.remove('is-opening');
+            }, 950);
+        }
+
+        function closeGuestbookPanel() {
+            const panel = document.getElementById('guestbook-panel');
+            if (!panel) return;
+
+            panel.classList.remove('is-opening');
+            panel.classList.add('is-closing');
+            panel.hidden = true;
+            panel.setAttribute('aria-hidden', 'true');
+            panel.classList.remove('is-open');
+            guestbookState.isOpen = false;
+
+            const terminalInput = document.getElementById('terminal-input');
+            if (terminalInput && terminalReady) {
+                setTimeout(() => terminalInput.focus(), 30);
+            }
+        }
+
+        async function handleGuestbookSubmit(event) {
+            event.preventDefault();
+
+            const form = event.currentTarget;
+            const submitButton = document.getElementById('guestbook-submit');
+            const formData = new FormData(form);
+
+            const payload = {
+                name: (formData.get('name') || '').toString(),
+                contact: (formData.get('contact') || '').toString(),
+                message: (formData.get('message') || '').toString()
+            };
+
+            if (!payload.message.trim()) {
+                setGuestbookFormStatus('Comment is required.', 'error');
+                return;
+            }
+
+            if (submitButton) {
+                submitButton.disabled = true;
+            }
+            setGuestbookFormStatus('Transmitting entry...', 'muted');
+
+            try {
+                try {
+                    const response = await fetch('./api/guestbook', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                        throw new Error(result.error || SiteTexts.commands.guestbook.submitError);
+                    }
+
+                    setGuestbookMode('server');
+                } catch (error) {
+                    if (isStaticGuestbookRateLimited()) {
+                        throw new Error(SiteTexts.commands.guestbook.rateLimit);
+                    }
+
+                    const staticEntries = getStaticGuestbookEntries();
+                    const nextId = staticEntries.reduce((maxId, item) => Math.max(maxId, Number(item.id) || 0), 0) + 1;
+                    staticEntries.push({
+                        id: nextId,
+                        name: payload.name.trim() || 'Anonymous fish',
+                        contact: payload.contact.trim(),
+                        message: payload.message.trim(),
+                        createdAt: new Date().toISOString()
+                    });
+                    saveStaticGuestbookEntries(staticEntries);
+                    saveStaticGuestbookRateLimit();
+                    setGuestbookMode('static');
+                }
+
+                form.reset();
+                setGuestbookFormStatus(
+                    guestbookState.mode === 'static'
+                        ? 'Entry saved in static mode. It will stay in this browser.'
+                        : SiteTexts.commands.guestbook.submitSuccess,
+                    'success'
+                );
+                await loadGuestbookPage(1);
+            } catch (error) {
+                const errorMessage = error.message?.includes('30 seconds')
+                    ? SiteTexts.commands.guestbook.rateLimit
+                    : (error.message || SiteTexts.commands.guestbook.submitError);
+                setGuestbookFormStatus(errorMessage, 'error');
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                }
+            }
+        }
+
+        function initGuestbook() {
+            const closeButton = document.getElementById('guestbook-close');
+            const prevButton = document.getElementById('guestbook-prev');
+            const nextButton = document.getElementById('guestbook-next');
+            const form = document.getElementById('guestbook-form');
+            const panel = document.getElementById('guestbook-panel');
+
+            if (closeButton) {
+                closeButton.addEventListener('click', closeGuestbookPanel);
+            }
+
+            if (prevButton) {
+                prevButton.addEventListener('click', () => {
+                    if (guestbookState.page > 1 && !guestbookState.isLoading) {
+                        loadGuestbookPage(guestbookState.page - 1);
+                    }
+                });
+            }
+
+            if (nextButton) {
+                nextButton.addEventListener('click', () => {
+                    if (guestbookState.page < guestbookState.totalPages && !guestbookState.isLoading) {
+                        loadGuestbookPage(guestbookState.page + 1);
+                    }
+                });
+            }
+
+            if (form) {
+                form.addEventListener('submit', handleGuestbookSubmit);
+            }
+
+            if (panel) {
+                panel.addEventListener('click', (event) => {
+                    if (event.target === panel) {
+                        closeGuestbookPanel();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && guestbookState.isOpen) {
+                    closeGuestbookPanel();
+                }
+            });
+        }
+
+        async function showChangelog() {
+            appendOutput('$ changelog', 'terminal-prompt');
+            appendOutput('');
+
+            typeTextWithLoader(SiteTexts.commands.changelog.intro, async () => {
+                try {
+                    const response = await fetch(`./CHANGELOG.md?ts=${Date.now()}`);
+                    if (!response.ok) {
+                        throw new Error('Failed to load changelog.');
+                    }
+
+                    const text = await response.text();
+                    const lines = text.replace(/\r\n/g, '\n').split('\n');
+                    typeTextWithLoader(lines, null, 10);
+                } catch (error) {
+                    typeTextWithLoader(SiteTexts.commands.changelog.error, null, 16);
+                }
+            }, 18);
         }
 
         // Command handlers
@@ -1012,6 +1591,16 @@
                 
                 processContactLine();
             },
+            guestbook: () => {
+                appendOutput('$ guestbook', 'terminal-prompt');
+                appendOutput('');
+                typeTextWithLoader(SiteTexts.commands.guestbook.intro, () => {
+                    openGuestbookPanel();
+                }, 18);
+            },
+            changelog: () => {
+                showChangelog();
+            },
             game: () => {
                 appendOutput('$ game', 'terminal-prompt');
                 appendOutput('');
@@ -1044,24 +1633,34 @@
                     
                     // Call showGameInstructions - wait a bit to ensure script is loaded
                     let retryCount = 0;
-                    const maxRetries = 20; // Try for up to 1 second (20 * 50ms)
+                    const maxRetries = 50; // Try for up to 2.5 seconds (50 * 50ms)
                     const tryCallShowGameInstructions = () => {
+                        console.log(`Checking for showGameInstructions (attempt ${retryCount + 1}/${maxRetries})...`);
+                        console.log('window.showGameInstructions type:', typeof window.showGameInstructions);
+                        console.log('window.showGameInstructions value:', window.showGameInstructions);
+                        
                         if (typeof window.showGameInstructions === 'function') {
                             console.log('Calling window.showGameInstructions()');
-                            window.showGameInstructions();
+                            try {
+                                window.showGameInstructions();
+                            } catch (error) {
+                                console.error('Error calling showGameInstructions:', error);
+                                appendOutput('Error: Failed to start game. ' + error.message);
+                            }
                         } else if (retryCount < maxRetries) {
                             retryCount++;
                             console.warn(`showGameInstructions not yet available, retrying... (${retryCount}/${maxRetries})`);
                             setTimeout(tryCallShowGameInstructions, 50);
                         } else {
                             console.error('showGameInstructions failed to load after multiple attempts');
+                            console.error('Available window properties:', Object.keys(window).filter(k => k.includes('Game') || k.includes('game')));
                             appendOutput('Error: Game initialization failed. showGameInstructions not found.');
                             appendOutput('Please refresh the page.');
                         }
                     };
                     
                     // Try immediately, then retry if needed
-                    setTimeout(tryCallShowGameInstructions, 0);
+                    setTimeout(tryCallShowGameInstructions, 100);
                 }, 20);
             },
             doom: () => {
@@ -1203,9 +1802,28 @@
             setTimeout(() => {
                 const monitorContent = document.querySelector('.monitor-content');
                 if (monitorContent) {
-                    monitorContent.scrollTop = monitorContent.scrollHeight;
+                    // Use actual content height for accurate scrolling
+                    const actualHeight = getActualContentHeight();
+                    const clientHeight = monitorContent.clientHeight;
+                    const maxScrollTop = Math.max(0, actualHeight - clientHeight);
+                    monitorContent.scrollTop = maxScrollTop;
+                    
+                    // Also ensure input is visible
+                    const inputLine = document.getElementById('terminal-input-line');
+                    if (inputLine) {
+                        const inputRect = inputLine.getBoundingClientRect();
+                        const viewportHeight = window.innerHeight;
+                        if (inputRect.bottom > viewportHeight) {
+                            const scrollTop = monitorContent.scrollTop;
+                            const targetScroll = scrollTop + (inputRect.bottom - viewportHeight) + 20;
+                            monitorContent.scrollTo({
+                                top: targetScroll,
+                                behavior: 'smooth'
+                            });
+                        }
+                    }
                 }
-            }, 100);
+            }, 150);
         }
 
         function initTerminal() {
@@ -1259,6 +1877,51 @@
             
             // Initial cursor position
             setTimeout(updateCursorPosition, 0);
+            
+            // Glitch animation for terminal prompt "$"
+            function startPromptGlitch() {
+                const promptEl = document.querySelector('.terminal-prompt');
+                if (!promptEl) return;
+                
+                const glitchChars = ['$', '#', '%', '&', '*', '@', '!'];
+                let glitchInterval;
+                
+                function glitch() {
+                    // Random chance to glitch (about 5% chance every 100ms)
+                    if (Math.random() < 0.05) {
+                        promptEl.classList.add('glitching');
+                        const originalText = promptEl.textContent;
+                        const glitchChar = glitchChars[Math.floor(Math.random() * glitchChars.length)];
+                        
+                        // Temporarily change the first character
+                        if (originalText.startsWith('$')) {
+                            promptEl.textContent = glitchChar + originalText.substring(1);
+                            
+                            // Restore after short delay
+                            setTimeout(() => {
+                                promptEl.textContent = originalText;
+                                promptEl.classList.remove('glitching');
+                            }, 50 + Math.random() * 100);
+                        }
+                    }
+                }
+                
+                // Glitch every 100-300ms randomly
+                function scheduleNextGlitch() {
+                    const delay = 100 + Math.random() * 200;
+                    glitchInterval = setTimeout(() => {
+                        glitch();
+                        scheduleNextGlitch();
+                    }, delay);
+                }
+                
+                scheduleNextGlitch();
+            }
+            
+            // Start glitch animation when terminal is ready
+            setTimeout(() => {
+                startPromptGlitch();
+            }, 2000);
 
             // Mobile: scroll input into view when focused
             function scrollInputIntoView() {
@@ -1339,7 +2002,7 @@
 
             // Focus on click anywhere
             document.querySelector('.monitor-content').addEventListener('click', () => {
-                if (terminalReady && !gameRunning && !gameWaitingForStart) {
+                if (terminalReady && !guestbookState.isOpen && !gameRunning && !gameWaitingForStart) {
                     inputEl.focus();
                 }
             });
@@ -1518,51 +2181,110 @@
                         container.style.opacity = '0';
                         container.style.transition = 'opacity 0.3s';
                         
-                        // Показываем предупреждение в центре
+                        // Показываем loader-сообщение в центре
                         const loaderTextEl = document.getElementById('loader-text');
                         if (loaderTextEl && SiteTexts && SiteTexts.loader) {
-                            // Извлекаем только предупреждение из текста
-                            const loaderText = SiteTexts.loader;
-                            const lines = loaderText.split('\n');
-                            const warningStartIndex = lines.findIndex(line => line.includes('WARNING'));
-                            
-                            if (warningStartIndex !== -1) {
-                                // Берем только строки с предупреждением
-                                const warningLines = lines.slice(warningStartIndex);
-                                loaderTextEl.innerHTML = warningLines.map(line => {
-                                    return `<div style="color: #ff6b6b; text-shadow: 0 0 15px #ff6b6b, 0 0 30px #ff6b6b; font-weight: bold; margin: 2px 0;">${line}</div>`;
-                                }).join('');
-                            } else {
-                                loaderTextEl.textContent = '⚠ WARNING: All texts and content generated by AI ⚠';
+                            const preloaderCopy = SiteTexts.preloader || {};
+                            const linesToRender = [
+                                ...(preloaderCopy.lines || []),
+                                '',
+                                ...(preloaderCopy.plaque || []),
+                                '',
+                                ...(preloaderCopy.footer || []),
+                                '',
+                                '════════════════════════════════════════════',
+                                'WARNING: all texts and content generated by AI',
+                                '════════════════════════════════════════════'
+                            ];
+
+                            function buildLoaderLine(line) {
+                                const lineEl = document.createElement('div');
+                                const trimmed = line.trim();
+                                lineEl.className = 'preloader-message-line';
+
+                                if (!trimmed) {
+                                    lineEl.classList.add('is-empty');
+                                    lineEl.innerHTML = '&nbsp;';
+                                } else {
+                                    if (trimmed.startsWith('╔') || trimmed.startsWith('║') || trimmed.startsWith('╚') || trimmed.includes('GUESTBOOK ONLINE')) {
+                                        lineEl.classList.add('is-plaque');
+                                    } else if (trimmed.includes('WARNING') || trimmed.includes('generated by AI') || trimmed.includes('════════')) {
+                                        lineEl.classList.add('is-warning');
+                                    } else if (trimmed.startsWith('accepted payloads') || trimmed.startsWith('rejected payloads')) {
+                                        lineEl.classList.add('is-dim');
+                                    }
+                                }
+
+                                return lineEl;
                             }
-                            
-                            // Центрируем и делаем больше
-                            loaderTextEl.style.position = 'absolute';
-                            loaderTextEl.style.top = '50%';
-                            loaderTextEl.style.left = '50%';
-                            loaderTextEl.style.transform = 'translate(-50%, -50%)';
-                            loaderTextEl.style.marginTop = '0';
-                            loaderTextEl.style.fontSize = '16px';
-                            loaderTextEl.style.textAlign = 'center';
-                            loaderTextEl.style.whiteSpace = 'pre';
-                            loaderTextEl.style.lineHeight = '1.6';
-                            loaderTextEl.style.zIndex = '100001';
-                            
-                            // Показываем предупреждение
-                            setTimeout(() => {
+
+                            function typeLoaderLine(lineEl, text, speed = 11) {
+                                return new Promise((resolve) => {
+                                    if (!text) {
+                                        lineEl.innerHTML = '&nbsp;';
+                                        resolve();
+                                        return;
+                                    }
+
+                                    let charPos = 0;
+                                    const cursorEl = document.createElement('span');
+                                    cursorEl.className = 'preloader-typing-cursor';
+                                    cursorEl.textContent = '▊';
+                                    lineEl.textContent = '';
+                                    lineEl.appendChild(cursorEl);
+
+                                    function step() {
+                                        if (charPos < text.length) {
+                                            const nextChar = document.createTextNode(text[charPos]);
+                                            lineEl.insertBefore(nextChar, cursorEl);
+                                            charPos++;
+                                            setTimeout(step, speed);
+                                        } else {
+                                            cursorEl.remove();
+                                            resolve();
+                                        }
+                                    }
+
+                                    step();
+                                });
+                            }
+
+                            async function showLoaderCopy() {
+                                loaderTextEl.className = 'preloader-message';
+                                loaderTextEl.innerHTML = '';
                                 loaderTextEl.style.opacity = '1';
-                                
-                                // Через секунду скрываем предупреждение и запускаем терминал
+
+                                for (const line of linesToRender) {
+                                    const lineEl = buildLoaderLine(line);
+                                    loaderTextEl.appendChild(lineEl);
+
+                                    const trimmed = line.trim();
+                                    if (!trimmed) {
+                                        await new Promise((resolve) => setTimeout(resolve, 70));
+                                        continue;
+                                    }
+
+                                    const speed =
+                                        trimmed.startsWith('╔') || trimmed.startsWith('║') || trimmed.startsWith('╚')
+                                            ? 4
+                                            : trimmed.startsWith('boot.notice:')
+                                                ? 8
+                                                : 10;
+                                    await typeLoaderLine(lineEl, line, speed);
+                                    await new Promise((resolve) => setTimeout(resolve, 65));
+                                }
+
+                                await new Promise((resolve) => setTimeout(resolve, 950));
+                                loaderTextEl.style.opacity = '0';
+
                                 setTimeout(() => {
-                                    loaderTextEl.style.opacity = '0';
-                                    loaderTextEl.style.transition = 'opacity 0.3s';
-                                    
-                                    // Запускаем анимацию терминала после скрытия
-                                    setTimeout(() => {
-                                        startTerminalLoadingAnimation();
-                                    }, 300);
-                                }, 1000);
-                            }, 300);
+                                    startTerminalLoadingAnimation();
+                                }, 300);
+                            }
+
+                            setTimeout(() => {
+                                showLoaderCopy();
+                            }, 180);
                         } else {
                             // Если нет элемента, просто запускаем терминал
                             setTimeout(() => {
@@ -1847,6 +2569,7 @@
         if (restoreButton) {
             restoreButton.style.display = 'none';
         }
+        initGuestbook();
         
         // Generate ASCII borders after monitor is visible
         setTimeout(() => {
@@ -1857,8 +2580,8 @@
         // Start preloader first
         initPreloader();
 
-        // Start terminal after preloader (3.5 seconds)
-        setTimeout(initTerminal, 3500);
+        // Start terminal after the expanded preloader sequence completes
+        setTimeout(initTerminal, 7800);
 
         // Random theme on load
         const availableThemes = [
