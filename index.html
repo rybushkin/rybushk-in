@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>rybushk.in v.5.3</title>
+    <title>rybushk.in v.5.4</title>
     
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6VH9684RN"></script>
@@ -238,7 +238,7 @@
             <div class="header-content-row">
                 <div class="header-left" style="flex: 0 0 auto;">
                     <div class="logo-header" id="logo-header">rybushk.in</div>
-                    <span class="logo-version" id="header-version">v.5.3</span>
+                    <span class="logo-version" id="header-version">v.5.4</span>
                 </div>
                 <div class="window-controls" style="border: none; padding: 0; margin-left: auto;">
                     <span title="Minimize" onclick="minimizeWindow()" style="border: none; padding: 0 4px; background: transparent; box-shadow: none;">▼</span>
@@ -267,7 +267,7 @@
                     <div class="guestbook-toolbar">
                         <div>
                             <div class="guestbook-kicker">PUBLIC TERMINAL LOG</div>
-                            <h2>Guestbook / v5.3</h2>
+                            <h2>Guestbook / v5.4</h2>
                             <p>Leave a comment without registration. Name and contact are optional.</p>
                         </div>
                         <button type="button" id="guestbook-close" class="guestbook-button guestbook-button-secondary guestbook-button-block">
@@ -374,6 +374,7 @@
             window.waitingForGameResponse = false;
         }
         let fluidGlassModeActive = false;
+        const SITE_BUILD_VERSION = 'v5.4';
         const guestbookState = {
             page: 1,
             limit: 4,
@@ -1131,6 +1132,15 @@
             statusEl.dataset.tone = tone;
         }
 
+        function trackAnalyticsEvent(eventName, params = {}) {
+            if (typeof gtag === 'undefined') return;
+
+            gtag('event', eventName, {
+                site_version: SITE_BUILD_VERSION,
+                ...params
+            });
+        }
+
         function formatGuestbookDate(value) {
             const parsed = new Date(value);
             if (Number.isNaN(parsed.getTime())) {
@@ -1325,6 +1335,9 @@
             panel.classList.remove('is-closing');
             panel.classList.add('is-opening');
             guestbookState.isOpen = true;
+            trackAnalyticsEvent('guestbook_open', {
+                source: 'terminal_command'
+            });
 
             const terminalInput = document.getElementById('terminal-input');
             if (terminalInput) {
@@ -1419,6 +1432,11 @@
                     setGuestbookMode('static');
                 }
 
+                trackAnalyticsEvent('guestbook_submit', {
+                    guestbook_mode: guestbookState.mode,
+                    has_contact: Boolean(payload.contact.trim()),
+                    has_name: Boolean(payload.name.trim())
+                });
                 form.reset();
                 setGuestbookFormStatus(
                     guestbookState.mode === 'static'
@@ -1488,6 +1506,9 @@
         async function showChangelog() {
             appendOutput('$ changelog', 'terminal-prompt');
             appendOutput('');
+            trackAnalyticsEvent('changelog_open', {
+                source: 'terminal_command'
+            });
 
             typeTextWithLoader(SiteTexts.commands.changelog.intro, async () => {
                 try {

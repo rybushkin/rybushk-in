@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v5.4 - 2026-03-22
+- bumped the visible site version to `v.5.4`
+- added dedicated GA events for `guestbook_open`, `guestbook_submit`, and `changelog_open`
+- deployed the analytics update to the production root and synced the `v0005/` copy
+
 ## v5.3 - 2026-03-20
 - bumped the visible site version to `v.5.3`
 - made the guestbook dual-mode: it now uses the backend when available and falls back to static browser storage on GitHub Pages
