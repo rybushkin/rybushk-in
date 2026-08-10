@@ -1,74 +1,44 @@
-# DOOM Setup Instructions
+# Local DOOM setup
 
-## Как встроить DOOM на сайт
+The public player lives at `https://rybushk.in/doom/` and expects one local
+bundle at:
 
-### Вариант 1: Использование .jsdos бандла (рекомендуется)
-
-1. **Скачайте DOOM shareware (бесплатная версия):**
-   - Перейдите на https://www.doomworld.com/idgames/
-   - Найдите и скачайте `doom19s.zip` (shareware версия)
-
-2. **Распакуйте архив:**
-   - Вам нужны файлы: `DOOM.EXE` и `doom1.wad`
-
-3. **Создайте .jsdos бандл:**
-   - Откройте https://js-dos.com/games/
-   - Нажмите "Create Game" или "Upload"
-   - Загрузите файлы: `DOOM.EXE` и `doom1.wad`
-   - В поле "Command" укажите: `DOOM.EXE`
-   - Нажмите "Create" и дождитесь создания бандла
-   - Скачайте готовый файл `.jsdos`
-
-4. **Поместите файл на сайт:**
-   - Переименуйте скачанный файл в `doom.jsdos`
-   - Поместите его в эту папку `doom/`
-   - Файл должен быть по пути: `doom/doom.jsdos`
-
-5. **Готово!**
-   - Откройте сайт и введите команду `doom` в терминале
-
-### Вариант 2: Использование ZIP архива
-
-1. **Создайте ZIP архив:**
-   - Создайте архив `doom.zip`
-   - Поместите в него: `DOOM.EXE` и `doom1.wad`
-   - Важно: файлы должны быть в корне ZIP, не в подпапках
-
-2. **Поместите на сайт:**
-   - Положите `doom.zip` в папку `doom/`
-   - Файл должен быть по пути: `doom/doom.zip`
-
-3. **Обновите код:**
-   - Откройте `game-doom.js`
-   - Раскомментируйте строки для ZIP:
-     ```javascript
-     const doomPath = "doom/doom.zip";
-     const doomExe = "./DOOM.EXE";
-     dosbox.run(doomPath, doomExe);
-     ```
-   - Закомментируйте строку с .jsdos бандлом
-
-## Структура папок
-
-```
-rybushk.in - v0002/
-├── doom/
-│   ├── doom.jsdos    ← Поместите сюда (Вариант 1)
-│   └── doom.zip      ← ИЛИ сюда (Вариант 2)
-├── game-doom.js
-├── index.html
-└── ...
+```text
+doom/doom.jsdos
 ```
 
-## Проверка
+The page uses the official js-dos v8 runtime from the CDN, but the game bundle
+is served by this site. The runtime must be loaded over HTTP(S); `file://`
+opening is not supported by js-dos.
 
-После размещения файлов:
-1. Откройте сайт
-2. Введите команду `doom` в терминале
-3. Игра должна запуститься
+The checked-in bundle is the DOOM shareware v1.9 episode-one build. It contains
+`DOOM.EXE` and `doom1.wad`; the WAD SHA-1 is
+`5b2e249b9c5133ec987b3ea77596381dc0d6bc1d`. No registered `DOOM.WAD` or DOOM
+II data is included.
 
-Если видите ошибку - проверьте:
-- Правильность пути к файлу
-- Наличие файла в папке `doom/`
-- Консоль браузера (F12) для деталей ошибки
+## Create the bundle
 
+1. Start with a legally obtained DOOM shareware archive, such as `doom19s.zip`.
+2. Extract `DOOM.EXE` and `doom1.wad`.
+3. Open [Game Studio v8](https://dos.zone/studio-v8/).
+4. Create a DOS game bundle and upload `DOOM.EXE` and `doom1.wad`.
+5. Set the auto-start command to `DOOM.EXE`.
+6. Download the generated `.jsdos` file as `doom.jsdos`.
+7. Put it in this directory and publish the active `_git` tree.
+
+Starting with js-dos 7+, a bundle must contain `.jsdos/dosbox.conf`. Game
+Studio writes that configuration for you; the bundle should also contain the
+DOOM executable and WAD at the paths used by the auto-start command.
+
+## Local verification
+
+Run a local HTTP server from the active `_git` directory:
+
+```bash
+python3 -m http.server 8000
+```
+
+Then open `http://localhost:8000/doom/` for the standalone player. The terminal
+command `doom` opens the compact player inside the terminal screen.
+
+Do not add commercial DOOM II or full-game WAD files to this repository.

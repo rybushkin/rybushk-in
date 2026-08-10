@@ -569,22 +569,162 @@ body:has(.monitor.fullscreen) {
     .aquarium-container { font-size: 6px; }
 }
 
-/* DOOM Container Styles */
-#doom-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    z-index: 2000;
-    background: var(--bg);
-    display: flex;
-    justify-content: center;
+/* Inline DOOM player */
+.monitor.doom-mode {
+    width: min(1200px, calc(100vw - 40px)) !important;
+    max-width: calc(100vw - 40px) !important;
+    height: min(900px, calc(75vw - 30px)) !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    aspect-ratio: 4 / 3;
+}
+
+.monitor.doom-mode .monitor-header,
+.monitor.doom-mode .monitor-footer {
+    display: none !important;
+}
+
+.doom-inline-player .sidebar,
+.doom-inline-player .w-14.flex-shrink-0:has(.sidebar),
+.doom-inline-player [class*="bg-black/70"] {
+    display: none !important;
+}
+
+.monitor.doom-mode .monitor-content {
+    position: relative;
+    overflow: hidden !important;
+    padding: 0 !important;
+}
+
+.monitor.doom-mode #ascii-scrollbar,
+.monitor.doom-mode #game-canvas,
+.monitor.doom-mode #terminal-output,
+.monitor.doom-mode #terminal-input-line,
+.monitor.doom-mode #game-prompt,
+.monitor.doom-mode #game-info,
+.monitor.doom-mode #guestbook-panel {
+    display: none !important;
+}
+
+.monitor.doom-mode #hero,
+.monitor.doom-mode #hero > div {
+    position: absolute !important;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.monitor.doom-mode .doom-inline-panel {
+    display: block !important;
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border: 0;
+    box-shadow: none;
+}
+
+.monitor.doom-mode .doom-inline-status {
+    position: absolute;
+    inset: 50% 10% auto;
+    z-index: 2;
+    transform: translateY(-50%);
+    text-align: center;
+}
+
+.doom-mobile-gate {
+    display: none;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 24px;
+    border: 1px solid #7cff8c;
+    background: rgba(0, 0, 0, 0.96);
+    color: #e8ffe8;
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+    text-shadow: 0 0 8px rgba(124, 255, 140, 0.55);
 }
 
-#doom-container canvas {
-    max-width: 100%;
-    max-height: 100%;
+.doom-mobile-gate strong {
+    color: #7cff8c;
 }
 
+.doom-mobile-gate[hidden] {
+    display: none !important;
+}
+
+.monitor.doom-mode .doom-mobile-gate:not([hidden]) {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    display: flex !important;
+}
+
+.monitor.doom-mode .doom-inline-player {
+    width: 100%;
+    height: 100% !important;
+    min-height: 0 !important;
+    aspect-ratio: auto;
+}
+
+.doom-inline-panel {
+    width: min(560px, 100%);
+    margin: 18px 0;
+    border: 1px solid var(--border);
+    background: #050805;
+    color: var(--accent);
+    box-shadow: 0 0 18px rgba(0, 255, 0, 0.22);
+}
+
+.doom-inline-status {
+    padding: 16px;
+    font-size: 11px;
+}
+
+.doom-inline-status[data-state="error"] {
+    color: #ff7070;
+}
+
+.doom-inline-status a {
+    display: inline-block;
+    margin-left: 8px;
+    color: inherit;
+}
+
+.doom-inline-player {
+    position: relative;
+    width: 100%;
+    height: 270px;
+    aspect-ratio: 8 / 5;
+    min-height: 210px;
+    overflow: hidden;
+    background: #000;
+}
+
+.doom-inline-player > * {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+}
+
+.doom-inline-player.jsdos-rso {
+    height: 270px !important;
+    min-height: 210px !important;
+    aspect-ratio: auto;
+}
+
+@media (max-width: 600px) {
+    .monitor.doom-mode {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        height: 75vw !important;
+    }
+
+    .monitor.doom-mode .doom-inline-status {
+        inset-inline: 5%;
+    }
+}

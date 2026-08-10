@@ -11,7 +11,7 @@ early console in decompress_kernel
 Decompressing Andrey... done
 
 ### Booting
-Booting human kernel v1984 (RUS→UK build)
+Booting human kernel v1984
 
 ## Системные сообщения
 
@@ -100,4 +100,3 @@ Booting human kernel v1984 (RUS→UK build)
 
 ### Login Prompt
 login: _
-

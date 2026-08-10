@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#050805">
+    <title>rybushk.in // DOOM</title>
+    <link rel="stylesheet" href="./doom.css?v=5.5-43-mobile1">
+    <link rel="stylesheet" href="https://v8.js-dos.com/latest/js-dos.css">
+</head>
+<body>
+    <main class="doom-app">
+        <header class="doom-header">
+            <div class="doom-brand">
+                <span class="doom-logo">rybushk.in</span>
+                <span class="doom-label">DOOM // 1993</span>
+            </div>
+            <div class="doom-actions">
+                <button type="button" class="doom-button" id="doom-fullscreen">fullscreen</button>
+                <a class="doom-button doom-button-link" data-back-link href="../">← terminal</a>
+            </div>
+        </header>
+
+        <section class="doom-stage" aria-label="DOOM player">
+            <div class="doom-status" id="doom-status" data-state="loading" aria-live="polite">
+                <strong>Loading local DOOM bundle…</strong>
+                <span>Checking `doom/doom.jsdos`.</span>
+            </div>
+            <div class="doom-mobile-gate" id="doom-mobile-gate" hidden role="status">
+                <strong>DOOM // MOBILE</strong>
+                <span>Mobile controls are not connected in this build yet.</span>
+                <span>Open the terminal on a computer with a keyboard to play.</span>
+            </div>
+            <div class="doom-player" id="doom-player"></div>
+        </section>
+
+        <footer class="doom-footer">
+            <span>LOCAL PLAYER / SHAREWARE DATA</span>
+            <span>js-dos v8 runtime</span>
+        </footer>
+    </main>
+
+    <script src="https://v8.js-dos.com/latest/js-dos.js"></script>
+    <script src="./doom.js"></script>
+</body>
+</html>

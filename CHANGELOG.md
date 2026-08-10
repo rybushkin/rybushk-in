@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## v5.5 - 2026-08-10
+- removed public geographic-origin markers from the active site content
+- added the `doom` command and standalone `/doom/` player route
+- made the `doom` command open a compact player directly inside the terminal
+- replaced the old dos.zone/v6 iframe integration with a local js-dos bundle contract
+- added the original shareware v1.9 bundle with `DOOM.EXE` and `doom1.wad`
+- added an explicit setup state for deployments without `doom/doom.jsdos`
+
 ## v5.4 - 2026-03-22
 - bumped the visible site version to `v.5.4`
 - added dedicated GA events for `guestbook_open`, `guestbook_submit`, and `changelog_open`

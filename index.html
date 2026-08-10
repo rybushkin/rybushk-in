@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>rybushk.in v.5.4</title>
+    <title>rybushk.in v.5.5</title>
     
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-E6VH9684RN"></script>
@@ -14,8 +14,7 @@
       gtag('config', 'G-E6VH9684RN');
     </script>
     
-    <link rel="stylesheet" href="styles-ascii.css">
-    <link rel="stylesheet" href="https://js-dos.com/6.22/current/css/js-dos.css">
+    <link rel="stylesheet" href="styles-ascii.css?v=5.5-doom-43-mobile3">
     <style>
         .monitor.fullscreen {
             width: 100vw !important;
@@ -238,7 +237,7 @@
             <div class="header-content-row">
                 <div class="header-left" style="flex: 0 0 auto;">
                     <div class="logo-header" id="logo-header">rybushk.in</div>
-                    <span class="logo-version" id="header-version">v.5.4</span>
+                    <span class="logo-version" id="header-version">v.5.5</span>
                 </div>
                 <div class="window-controls" style="border: none; padding: 0; margin-left: auto;">
                     <span title="Minimize" onclick="minimizeWindow()" style="border: none; padding: 0 4px; background: transparent; box-shadow: none;">▼</span>
@@ -255,6 +254,17 @@
             <section id="hero" class="hero-section" style="position: relative; z-index: 2;">
                 <div>
                     <div id="terminal-output" class="terminal-text"></div>
+                    <section id="doom-inline-panel" class="doom-inline-panel" hidden aria-label="DOOM player">
+                        <div id="doom-inline-status" class="doom-inline-status" role="status" aria-live="polite">
+                            Loading local DOOM bundle…
+                        </div>
+                        <div id="doom-mobile-gate" class="doom-mobile-gate" hidden role="status">
+                            <strong>DOOM // MOBILE</strong>
+                            <span>Mobile controls are not connected in this build yet.</span>
+                            <span>Open the terminal on a computer with a keyboard to play.</span>
+                        </div>
+                        <div id="doom-inline-player" class="doom-inline-player"></div>
+                    </section>
                     <div id="terminal-input-line" style="display: none;">
                         <span class="terminal-prompt">$ </span><input type="text" id="terminal-input" class="terminal-input" autocomplete="off" spellcheck="false" placeholder="menu / help"><span class="custom-cursor">_</span>
                     </div>
@@ -267,7 +277,7 @@
                     <div class="guestbook-toolbar">
                         <div>
                             <div class="guestbook-kicker">PUBLIC TERMINAL LOG</div>
-                            <h2>Guestbook / v5.4</h2>
+                            <h2>Guestbook / v5.5</h2>
                             <p>Leave a comment without registration. Name and contact are optional.</p>
                         </div>
                         <button type="button" id="guestbook-close" class="guestbook-button guestbook-button-secondary guestbook-button-block">
@@ -352,8 +362,6 @@
         ←
     </button>
 
-    <div id="doom-container" style="display: none;"></div>
-
     <!-- Glitch Overlay -->
     <div id="glitch-overlay">
         <pre id="glitch-skull"></pre>
@@ -361,8 +369,7 @@
 
     <script src="texts.js"></script>
     <script src="game-arkanoid.js"></script>
-    <script src="game-doom.js"></script>
-    <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+    <script src="doom/doom-inline.js?v=5.5-inline7"></script>
     <script>
         // Terminal System
         let terminalHistory = [];
@@ -374,7 +381,7 @@
             window.waitingForGameResponse = false;
         }
         let fluidGlassModeActive = false;
-        const SITE_BUILD_VERSION = 'v5.4';
+        const SITE_BUILD_VERSION = 'v5.5';
         const guestbookState = {
             page: 1,
             limit: 4,
@@ -621,6 +628,9 @@
         // Ограничивает скролл до максимально допустимой высоты контента
         function clampScrollPosition() {
             // Не ограничиваем скролл во время игры
+            if (window.doomInlineActive) {
+                return;
+            }
             if ((typeof gameRunning !== 'undefined' && gameRunning) || 
                 (typeof gameWaitingForStart !== 'undefined' && gameWaitingForStart)) {
                 return;
@@ -1691,12 +1701,15 @@
                     'Launching: DOOM (1993)...',
                     '--------------------------------------------',
                     'The classic first-person shooter.',
-                    '  ESC to exit, arrow keys to move,',
-                    '  Ctrl to shoot, Space to use/open.',
+                        '  Taking over the terminal screen...',
                     '',
                     'Loading...'
                 ], () => {
-                    startDoom();
+                    if (window.doomInlinePlayer) {
+                        window.doomInlinePlayer.open();
+                    } else {
+                        appendOutput('Inline DOOM player is unavailable. Try /doom/.');
+                    }
                 }, 20);
             },
             theme: (themeName) => {
@@ -3225,5 +3238,3 @@ o                  ,' /  / .' .' .'  \`.
     </script>
 </body>
 </html>
-
-

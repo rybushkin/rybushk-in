@@ -15,7 +15,6 @@ rybushk-in/
 ├── styles-ascii.css    # ASCII/Terminal стили
 ├── texts.js            # Тексты и контент
 ├── game-arkanoid.js    # Игра Arkanoid
-├── game-doom.js        # Игра DOOM
 ├── content-md/         # Markdown контент для команд
 │   ├── commands/       # Команды сайта
 │   │   ├── about.md
@@ -31,8 +30,12 @@ rybushk-in/
 │   ├── facts.md        # Факты
 │   ├── loader.md       # Лоадер
 │   └── themes.md       # Темы оформления
-├── doom/               # DOOM игра файлы
-│   └── README.md       # Инструкции по настройке DOOM
+├── doom/               # DOOM player files
+│   ├── index.html      # Standalone player route
+│   ├── doom.js         # js-dos bootstrap and setup state
+│   ├── doom-inline.js  # Inline terminal player lifecycle
+│   ├── doom.css        # CRT/terminal player styles
+│   └── README.md       # Bundle setup instructions
 └── 404.html            # Страница 404
 ```
 
@@ -45,7 +48,7 @@ rybushk-in/
 - `cv` - резюме
 - `contacts` - контакты
 - `game` - запустить игру Arkanoid
-- `doom` - запустить DOOM (требует настройки, см. doom/README.md)
+- `doom` - открыть компактный DOOM player внутри терминала
 - `theme [название]` - сменить тему оформления
 - `menu` - показать меню
 
@@ -78,14 +81,12 @@ open http://localhost:8000
 
 ## 🎮 Настройка DOOM
 
-Для работы команды `doom` нужно:
-1. Скачать DOOM shareware (doom19s.zip)
-2. Создать .jsdos бандл или ZIP архив
-3. Поместить файл в папку `doom/`
+Команда `doom` запускает компактный локальный player внутри терминала.
+Страница `/doom/` остаётся отдельным полноэкранным режимом. Обе версии используют
+локальный `doom/doom.jsdos` через js-dos v8.
 
 Подробные инструкции: [doom/README.md](./doom/README.md)
 
 ## 📝 Лицензия
 
 MIT
-

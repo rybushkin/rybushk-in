@@ -1,0 +1,230 @@
+:root {
+    color-scheme: dark;
+    --doom-bg: #050805;
+    --doom-panel: #0a100a;
+    --doom-line: #214b27;
+    --doom-accent: #67ff7b;
+    --doom-muted: #82a486;
+    --doom-danger: #ff8a67;
+    --doom-shadow: rgba(64, 255, 90, 0.22);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+}
+
+body {
+    min-height: 100dvh;
+    overflow: hidden;
+    background:
+        linear-gradient(rgba(5, 8, 5, 0.94), rgba(5, 8, 5, 0.94)),
+        repeating-linear-gradient(0deg, rgba(103, 255, 123, 0.03) 0 1px, transparent 1px 4px),
+        var(--doom-bg);
+    color: var(--doom-accent);
+    font-family: "Courier New", Courier, monospace;
+}
+
+button,
+a {
+    font: inherit;
+}
+
+.doom-app {
+    display: flex;
+    height: 100dvh;
+    min-height: 100dvh;
+    flex-direction: column;
+}
+
+.doom-header,
+.doom-footer {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 48px;
+    padding: 10px 16px;
+    border: 1px solid var(--doom-line);
+    background: rgba(10, 16, 10, 0.96);
+    box-shadow: 0 0 20px var(--doom-shadow);
+    text-shadow: 0 0 8px var(--doom-shadow);
+}
+
+.doom-header {
+    border-bottom: 0;
+}
+
+.doom-footer {
+    min-height: 30px;
+    border-top: 0;
+    color: var(--doom-muted);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+}
+
+.doom-brand,
+.doom-actions {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.doom-logo {
+    color: #fff;
+    font-weight: 700;
+}
+
+.doom-label {
+    color: var(--doom-muted);
+    font-size: 11px;
+}
+
+.doom-button {
+    display: inline-flex;
+    min-height: 28px;
+    align-items: center;
+    justify-content: center;
+    padding: 4px 9px;
+    border: 1px solid var(--doom-accent);
+    background: transparent;
+    color: var(--doom-accent);
+    cursor: pointer;
+    font-size: 11px;
+    text-decoration: none;
+    text-transform: uppercase;
+    transition: background-color 120ms ease, color 120ms ease;
+}
+
+.doom-button:hover,
+.doom-button:focus-visible {
+    outline: none;
+    background: var(--doom-accent);
+    color: var(--doom-bg);
+}
+
+.doom-stage {
+    position: relative;
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    border: 1px solid var(--doom-line);
+    background: #000;
+}
+
+.doom-player,
+.doom-player > * {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+}
+
+.doom-player {
+    position: absolute;
+    inset: 0;
+}
+
+.doom-mobile-gate {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 24px;
+    background: rgba(5, 8, 5, 0.96);
+    color: var(--doom-accent);
+    font-size: 13px;
+    line-height: 1.5;
+    text-align: center;
+}
+
+.doom-mobile-gate[hidden] {
+    display: none !important;
+}
+
+.doom-player .sidebar,
+.doom-player .w-14.flex-shrink-0:has(.sidebar),
+.doom-player [class*="bg-black/70"] {
+    display: none !important;
+}
+
+.doom-status {
+    position: absolute;
+    z-index: 2;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    width: min(540px, calc(100% - 32px));
+    transform: translate(-50%, -50%);
+    flex-direction: column;
+    gap: 10px;
+    padding: 20px;
+    border: 1px solid var(--doom-line);
+    background: rgba(5, 8, 5, 0.96);
+    color: var(--doom-accent);
+    font-size: 13px;
+    line-height: 1.55;
+    text-align: center;
+    box-shadow: 0 0 30px var(--doom-shadow);
+}
+
+.doom-status[data-state="error"] {
+    border-color: var(--doom-danger);
+    color: var(--doom-danger);
+}
+
+.doom-status[data-state="ready"] {
+    border-color: var(--doom-muted);
+    color: var(--doom-muted);
+    opacity: 0.86;
+}
+
+.doom-status.is-hidden {
+    display: none;
+}
+
+.doom-status a {
+    color: inherit;
+}
+
+@media (max-width: 640px) {
+    .doom-header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+        padding: 10px 12px;
+    }
+
+    .doom-actions {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .doom-actions .doom-button-link {
+        display: inline-flex;
+        margin-left: auto;
+    }
+
+    .doom-button {
+        min-height: 34px;
+        padding: 6px 10px;
+    }
+
+    .doom-footer {
+        padding: 7px 10px;
+        font-size: 9px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        gap: 4px 12px;
+    }
+}
